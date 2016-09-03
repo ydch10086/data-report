@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ane.report.operation.scan.dao.ICenterContrastDao">
+	<resultMap id="ResultMap"
+		type="com.ane.report.operation.scan.model.CenterContrastVO">
+		<result column="create_by" property="createBy" jdbcType="VARCHAR" />
+		<result column="create_by_id" property="createById" jdbcType="INTEGER" />
+		<result column="siteName" property="siteName" jdbcType="VARCHAR" />
+		<result column="siteId" property="siteId" jdbcType="INTEGER" />
+		<result column="scan_time" property="scanTime" jdbcType="TIMESTAMP" />
+		<result column="pack_bar_code" property="billNo" jdbcType="INTEGER" />
+		<result column="SANTYPE" property="scanType" jdbcType="INTEGER" />
+	</resultMap>
+	<!-- 本站有发-下站未到 -->
+	<select id="queryLoadcar" resultMap="ResultMap">
+		SELECT DISTINCT
+		'装车扫描' AS SANTYPE,
+		lc.pack_bar_code,
+		lc.create_by,
+		lc.create_by_id,
+		lc.scan_time,
+		lc.leave_siste siteName,
+		lc.leave_siste_id siteId
+		FROM
+		hs_opt_loadcar lc
+		inner JOIN
+		hs_opt_unloadcar ul
+		ON lc.task_num =
+		ul.task_num
+		AND lc.next_site_id =
+		ul.unload_site_id
+		and ul.status=1
+		WHERE
+		lc.pack_bar_code NOT IN
+		(SELECT
+		DISTINCT
+		ui.pack_bar_code
+		FROM
+		hs_opt_unloadcar_items ui
+		LEFT JOIN
+		hs_opt_unloadcar ul
+		ON
+		ui.unload_car_id = ul.unload_car_id
+		and
+		ul.status=1
+		where ui.status=1)
+		AND lc.status=1
+		<if test="createById != null and createById != ''">
+			AND lc.create_by_id = #{createById}
+		</if>
+		<if test="billNo != null and billNo != ''">
+			AND lc.pack_bar_code = #{billNo}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND lc.leave_siste_id = #{siteId}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND to_date(#{scanStartTime,jdbcType=VARCHAR},'yyyy-mm-dd') <= lc.scan_time]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND to_date(#{scanEndTime,jdbcType=VARCHAR},'yyyy-mm-dd') + 1>= lc.scan_time]]>
+		</if>
+		ORDER BY LC.SCAN_TIME DESC
+	</select>
+	<!-- 本站有到-上站未发 -->
+	<select id="queryUnloadcar" resultMap="ResultMap">
+		SELECT DISTINCT
+		'卸车扫描' AS SANTYPE,
+		ui.pack_bar_code,
+		ui.unload_site_id
+		siteId,
+		ui.unload_site siteName,
+		ui.create_by,
+		ui.create_by_id,
+		ui.scan_time
+		FROM hs_opt_unloadcar_items ui
+		inner JOIN hs_opt_unloadcar
+		ul
+		ON
+		ui.unload_car_id = ul.unload_car_id
+		and ui.status=1
+		WHERE
+		ui.pack_bar_code NOT IN
+		(SELECT pack_bar_code
+		FROM hs_opt_loadcar lc
+		inner JOIN hs_opt_unloadcar
+		ul
+		ON lc.task_num = ul.task_num
+		AND
+		lc.next_site_id = ul.unload_site_id
+		and ul.status=1)
+		AND ui.status=1
+		<if test="createById != null and createById != ''">
+			AND ui.create_by_id = #{createById}
+		</if>
+		<if test="billNo != null and billNo != ''">
+			AND ui.pack_bar_code = #{billNo}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND ui.unload_site_id = #{siteId}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND to_date(#{scanStartTime,jdbcType=VARCHAR},'yyyy-mm-dd') <= ui.scan_time]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND to_date(#{scanEndTime,jdbcType=VARCHAR},'yyyy-mm-dd') >= ui.scan_time]]>
+		</if>
+		ORDER BY UI.SCAN_TIME DESC
+	</select>
+
+</mapper>

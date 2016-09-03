@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ane.report.operation.chartReport.dao.IChartReportDao">
+
+	<!--集包統計 -->
+	<select id="groupPackCount" resultType="java.util.Map">
+		SELECT COUNT(CASE WHEN pack_bar_code like '91%' THEN 1 ELSE NULL END)
+		AS green,
+		COUNT(CASE WHEN pack_bar_code like '92%' THEN 1 ELSE NULL
+		END) AS yellow,
+		COUNT(CASE WHEN pack_bar_code like '93%' THEN 1 ELSE
+		NULL END) AS red
+		FROM hs_opt_group_pack
+		<!-- where site_id=#{siteId} <![CDATA[and scan_time=to_date(sysdate,'dd-mm-yyyy')]]> -->
+	</select>
+	<!-- 网点收件排名 -->
+	<select id="querySiteRank"
+		resultType="com.ane.report.operation.chartReport.model.ChartReportVO">
+		select ewbnum,siteid,sitename from（select
+		count(r.site_id) as ewbNum,
+		max(r.site_id) as siteid,
+		max(s.site_name) as sitename
+		from
+		hs_opt_receive r left join hs_basic_site s
+		on r.site_id = s.site_id
+		group by r.site_id order by count(r.site_id) desc）
+		where
+		<![CDATA[rownum<=10]]>
+	</select>
+	<!-- 网点活动记录 -->
+	<select id="siteActivityCount"
+		resultType="com.ane.report.operation.chartReport.model.ChartReportVO">
+		select count(1) as siteCount from(
+		select r.site_id
+		from
+		hs_opt_receive r
+		inner join hs_basic_site s
+		on r.site_id = s.site_id
+		UNION
+		select w.site_id
+		from hs_opt_weigh w
+		inner join hs_basic_site s
+		on
+		w.site_id = s.site_id
+
+		UNION
+		select sendPack.site_id
+		from hs_opt_send_pack
+		sendPack
+		inner join hs_basic_site s
+		on sendPack.site_id = s.site_id
+
+		UNION
+		select send.site_id
+		from hs_opt_send send
+		inner join hs_basic_site
+		s
+		on send.site_id = s.site_id
+
+		UNION
+		select reach.site_id
+		from hs_opt_reach
+		reach
+		inner join hs_basic_site s
+		on reach.site_id = s.site_id
+		UNION
+		select reachPack.site_id
+		from hs_opt_reach_pack reachPack
+		inner join
+		hs_basic_site s
+		on reachPack.site_id = s.site_id
+
+		UNION
+		select del.site_id
+		from hs_opt_delivery del
+		inner join hs_basic_site s
+		on del.site_id =
+		s.site_id
+
+		UNION
+		select signewb.site_id
+		from hs_opt_sign signewb
+		inner join
+		hs_basic_site s
+		on signewb.site_id = s.site_id
+		UNION
+		select back.site_id
+		from hs_opt_return back
+		inner join hs_basic_site s
+		on back.site_id =
+		s.site_id
+		UNION
+		select problem.site_id
+		from hs_opt_problem problem
+		inner
+		join hs_basic_site s
+		on problem.site_id = s.site_id) union all select
+		count(1) as siteCount from
+		hs_basic_site
+	</select>
+	<select id="arriveAndSignChart"
+		resultType="com.ane.report.operation.chartReport.model.ReceiveAndSignChartVO">
+		<![CDATA[
+			SELECT COUNT(EWB_NO) receiveNum, C.T2 scantime
+			FROM (SELECT A.EWB_NO, A.T1, B.T2
+			FROM (SELECT D.EWB_NO,
+			D.RD_STATUS,
+			TO_DATE(TO_CHAR(D.SCAN_TIME, 'YYYY-MM-DD'),
+			'YYYY-MM-DD') T1 FROM HS_OPT_RECEIVE D WHERE D.SCAN_TIME > (SYSDATE - 7) AND
+			D.RD_STATUS = 1) A
+			RIGHT JOIN (SELECT TO_DATE(TO_CHAR(SYSDATE - 6, 'YYYY-MM-DD'),
+			'YYYY-MM-DD') + ROWNUM - 1 T2
+			FROM DUAL
+			 CONNECT BY ROWNUM <=
+			TO_DATE(TO_CHAR(SYSDATE, 'YYYY-MM-DD'),
+			'YYYY-MM-DD') -
+			TO_DATE(TO_CHAR(SYSDATE - 6, 'YYYY-MM-DD'),
+			'YYYY-MM-DD') + 1) B
+			ON A.T1 = B.T2) C
+			GROUP BY C.T2
+			ORDER BY C.T2 asc
+		]]>
+	</select>
+
+	<select id="signChart" resultType="com.ane.report.operation.chartReport.model.ReceiveAndSignChartVO">
+		<![CDATA[
+			SELECT COUNT(EWB_NO) signNumCount, C.T2 
+			FROM (SELECT A.EWB_NO, A.T1, B.T2
+			FROM (SELECT D.EWB_NO,
+			D.RD_STATUS,
+			TO_DATE(TO_CHAR(D.SIGN_TIME, 'YYYY-MM-DD'),
+			'YYYY-MM-DD') T1 FROM HS_OPT_SIGN D WHERE D.SIGN_TIME > (SYSDATE - 7) AND
+			D.RD_STATUS = 1) A
+			RIGHT JOIN (SELECT TO_DATE(TO_CHAR(SYSDATE - 6, 'YYYY-MM-DD'),
+			'YYYY-MM-DD') + ROWNUM - 1 T2
+			FROM DUAL
+			CONNECT BY ROWNUM <=
+			TO_DATE(TO_CHAR(SYSDATE, 'YYYY-MM-DD'),
+			'YYYY-MM-DD') -
+			TO_DATE(TO_CHAR(SYSDATE - 6, 'YYYY-MM-DD'),
+			'YYYY-MM-DD') + 1) B
+			ON A.T1 = B.T2) C
+			GROUP BY C.T2
+			ORDER BY C.T2 ASC
+		]]>
+	</select>
+	<select id="groupPackChart" resultType="com.ane.report.operation.chartReport.model.ChartReportVO">
+		<![CDATA[
+		SELECT COUNT(PACK_BAR_CODE) packBarCodeNum, C.T2
+	      FROM (SELECT A.PACK_BAR_CODE, A.T1, B.T2
+	      FROM (SELECT D.PACK_BAR_CODE,
+	      D.STATUS,
+	      TO_DATE(TO_CHAR(D.SCAN_TIME, 'YYYY-MM-DD'),
+	      'YYYY-MM-DD') T1 FROM HS_OPT_GROUP_PACK D WHERE D.SCAN_TIME > (SYSDATE - 7) AND
+	      D.STATUS = 1) A
+	      RIGHT JOIN (SELECT TO_DATE(TO_CHAR(SYSDATE - 6, 'YYYY-MM-DD'),
+	      'YYYY-MM-DD') + ROWNUM - 1 T2
+	      FROM DUAL
+	      CONNECT BY ROWNUM <=
+	      TO_DATE(TO_CHAR(SYSDATE, 'YYYY-MM-DD'),
+	      'YYYY-MM-DD') -
+	      TO_DATE(TO_CHAR(SYSDATE - 6, 'YYYY-MM-DD'),
+	      'YYYY-MM-DD') + 1) B
+	      ON A.T1 = B.T2) C
+	      GROUP BY C.T2
+	      ORDER BY C.T2 ASC
+		]]>
+	</select>
+	
+
+
+</mapper>

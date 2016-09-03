@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="EmployeeVOMapper">
+	<resultMap type="com.ane.report.operation.scan.model.BasicEmployeeVO" id="BasicEmployeeResult">
+		<result property="employeeId" column="EMPLOYEE_ID" />
+		<result property="employeeCode" column="EMPLOYEE_CODE" />
+		<result property="employeeName" column="EMPLOYEE_NAME" />
+		<result property="employeePinyin" column="EMPLOYEE_PINYIN" />
+		<result property="employeeOrder" column="EMPLOYEE_ORDER" />
+		<result property="siteId" column="SITE_ID" />
+		<result property="deptJobId" column="DEPT_JOB_ID" />
+		<result property="idCard" column="ID_CARD" />
+		<result property="sex" column="SEX" />
+		<result property="phone" column="PHONE" />
+		<result property="phoneSms" column="PHONE_SMS" />
+		<result property="e_mail" column="E_MAIL" />
+		<result property="birthday" column="BIRTHDAY" />
+		<result property="address" column="ADDRESS" />
+		<result property="selfRemark" column="SELF_REMARK" />
+		<result property="blUse" column="BL_USE" />
+		<result property="startDate" column="START_DATE" />
+		<result property="endDate" column="END_DATE" />
+		<result property="basicSalar" column="BASIC_SALAR" />
+		<result property="addSalar" column="ADD_SALAR" />
+		<result property="limitSumAmount" column="LIMIT_SUM_AMOUNT" />
+		<result property="limitOneAmount" column="LIMIT_ONE_AMOUNT" />
+		<result property="transportToolId" column="TRANSPORT_TOOL_ID" />
+		<result property="partId" column="PART_ID" />
+		<result property="jobRemark" column="JOB_REMARK" />
+		<result property="driverLicenseType" column="DRIVER_LICENSE_TYPE" />
+		<result property="bankId" column="BANK_ID" />
+		<result property="createdBy" column="CREATED_BY" />
+		<result property="createdTime" column="CREATED_TIME" />
+		<result property="modifiedBy" column="MODIFIED_BY" />
+		<result property="modifiedTime" column="MODIFIED_TIME" />
+		<result property="rdStatus" column="RD_STATUS" />
+		<result property="employeeNo" column="EMPLOYEE_NO" />
+		<result property="BankAccountId" column="BANK_ACCOUNT_ID" />
+		<result property="BankAccountName" column="BANK_ACCOUNT_NAME" />
+		<result property="BankAccountNo" column="BANK_ACCOUNT_NO" />
+		<result property="alipayNo" column="ALIPAY_NO"/>
+		<result property="weChatNo" column="WECHAT_NO"/>
+		<result property="realNameStatus" column="REAL_NAME_STATUS"/>
+		<result property="partFlag" column="PART_FLAG"/>
+	</resultMap>
+	<!-- 按名称、拼音、编号模糊查询员工 -->
+	<select id="queryEmpByLikePCN" parameterType="com.ane.report.operation.scan.model.BasicEmployeeVO" resultMap="BasicEmployeeResult">
+		select * from (
+		select 
+			employee_id, employee_code, employee_name, employee_pinyin, employee_order,
+			site_id, dept_job_id, id_card, sex, phone, phone_sms, e_mail, birthday,
+			address, self_remark, bl_use, start_date, end_date, basic_salar, add_salar, 
+			limit_sum_amount, limit_one_amount, transport_tool_id, part_id, job_remark, 
+			driver_license_type, bank_id, created_by, created_time, 
+			modified_by, modified_time, rd_status,employee_no,bank_account_id, bank_account_name, bank_account_no,
+			ALIPAY_NO,WECHAT_NO,REAL_NAME_STATUS,nvl(PART_FLAG,0) PART_FLAG
+		from HS_BASIC_EMPLOYEE where 
+			RD_STATUS=1 and (EMPLOYEE_PINYIN LIKE '%${pinyin}%' or EMPLOYEE_NAME 
+			LIKE '%${title}%' or EMPLOYEE_CODE LIKE '%${title}%') 
+			and SITE_ID in (SELECT SITE_ID FROM HS_BASIC_SITE  
+			<if test="siteId!=null and siteId!=''">
+				START WITH  SITE_ID =#{siteId} 
+			</if>
+			CONNECT BY NOCYCLE PRIOR SITE_ID=PARENT_SITE_ID ) 
+		order by LENGTH(EMPLOYEE_NAME),EMPLOYEE_ORDER ) where <![CDATA[	 rownum <= #{rownum} ]]>
+		<!-- <![CDATA[	
+		SELECT 
+			EMPLOYEE_ID AS employeeId, EMPLOYEE_CODE AS employeeCode, 
+			EMPLOYEE_NAME AS employeeName, EMPLOYEE_PINYIN AS employeePinyin 
+		FROM
+			(SELECT 
+				EMPLOYEE_ID, EMPLOYEE_CODE, EMPLOYEE_NAME, EMPLOYEE_PINYIN
+			FROM HS_BASIC_EMPLOYEE WHERE 
+				RD_STATUS=1 and (EMPLOYEE_PINYIN LIKE '%${pinyin}%' or EMPLOYEE_NAME 
+				LIKE '%${title}%' or EMPLOYEE_CODE LIKE '%${title}%') 
+				AND SITE_ID =#{siteId}
+			ORDER BY LENGTH(EMPLOYEE_NAME),EMPLOYEE_ORDER )
+		WHERE 
+			ROWNUM <= #{rownum}
+		]]> -->
+	</select>
+	<select id="getSiteByEmployeeId" parameterType="java.lang.Long" resultMap="BasicEmployeeResult">
+		select * from HS_BASIC_EMPLOYEE where EMPLOYEE_ID=#{employee_id}
+	</select>
+</mapper>

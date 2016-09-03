@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ane.report.operation.scan.dao.IGroupPackScanDao">
+	<resultMap id="groupPackResultMap" type="com.ane.report.operation.scan.model.GroupPackScanVO">
+        <result property="groupPackId" column="GROUP_PACK_ID"/>
+        <result property="packBarCode" column="PACK_BAR_CODE"/>
+        <result property="siteName" column="SITE_NAME"/>
+        <result property="siteId" column="SITE_ID"/>
+        <result property="scanTime" column="SCAN_TIME"/>
+        <result property="groupType" column="GROUP_TYPE"/>
+        <result property="createById" column="CREATE_BY_ID"/>
+        <result property="createBy" column="CREATE_BY"/>
+        <result property="destSite" column="DEST_SITE"/>
+		<result property="destSiteId" column="DEST_SITE_ID"/>
+		<result property="createTime" column="CREATE_TIME"/>
+		<result property="splitTime" column="SPLIT_TIME"/>
+		<result property="splitPackId" column="SPLIT_PACK_ID"/>
+		<result property="splitSiteId" column="SPLIT_SITE_ID"/>
+		<result property="splitSiteName" column="SPLIT_SITE_NAME"/>
+		<result property="splitById" column="SPLIT_BY_ID"/>
+		<result property="splitBy" column="SPLIT_BY"/>
+		<result property="ewbNum" column="EWB_NUM"/>
+		<result property="scanSourceName" column="SCAN_SOURCE"/>
+		<result property="deviceCode" column="DEVICE_CODE"/>
+		<result property="rdStatus" column="STATUS"/>
+    </resultMap>
+
+	<sql id="groupPackScanSql">
+		DISTINCT
+		GROUPPACK.PACK_BAR_CODE,
+		GROUPPACK.GROUP_PACK_ID,
+		GROUPPACK.SITE_NAME,
+		GROUPPACK.SITE_ID,
+		GROUPPACK.SCAN_TIME,
+		GROUPPACK.GROUP_TYPE,
+		GROUPPACK.CREATE_BY_ID,
+		GROUPPACK.CREATE_BY,
+		GROUPPACK.DEST_SITE,
+		GROUPPACK.DEST_SITE_ID,
+		GROUPPACK.CREATE_TIME,
+		GROUPPACK.SPLIT_TIME,
+		GROUPPACK.SPLIT_PACK_ID,
+		GROUPPACK.SPLIT_SITE_ID,
+		GROUPPACK.SPLIT_SITE_NAME,
+		GROUPPACK.SPLIT_BY_ID,
+		GROUPPACK.SPLIT_BY,
+		GROUPPACK.EWB_NUM,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  GROUPPACK.SCAN_SOURCE) AS SCAN_SOURCE,
+		GROUPPACK.DEVICE_CODE,
+		GROUPPACK.STATUS
+	</sql>
+	<select id="queryGroupPackScanByPage" resultMap="groupPackResultMap" >
+		select <include refid="groupPackScanSql"/>
+		 FROM HS_OPT_GROUP_PACK GROUPPACK LEFT JOIN HS_OPT_GROUP_PACK_ITEMS I ON GROUPPACK.GROUP_PACK_ID = I.GROUP_PACK_ID
+		WHERE 1=1
+		<if test="createBy != null and createBy != ''">
+			AND GROUPPACK.CREATE_BY_ID = #{createBy}
+		</if>
+		<if test="packBarCode != null and packBarCode != ''">
+			AND (GROUPPACK.PACK_BAR_CODE = #{packBarCode} OR I.EWB_NO = #{packBarCode})
+		</if>
+		<if test="siteName != null and siteName != ''">
+			AND GROUPPACK.SITE_ID = #{siteName}
+		</if>
+		<if test="destSite != null and destSite != ''">
+			AND GROUPPACK.DEST_SITE_ID = #{destSite}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= GROUPPACK.SCAN_TIME]]> 
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE} + 1>= GROUPPACK.SCAN_TIME]]>
+		</if>
+		ORDER BY GROUPPACK.SCAN_TIME DESC
+	</select>
+	
+	<select id="queryGroupPackScanDetailBybpcode" resultType="com.ane.report.operation.scan.model.GroupPackScanDetailVO" >
+		SELECT EWB.EWB_NO AS EWBNO, EWB.EWB_DATE AS EWBDATE, BSITE.SITE_NAME AS SITENAME
+		  FROM 
+		       HS_OPT_GROUP_PACK_ITEMS PACKITEMS,
+		       HS_OPT_EWB              EWB,
+		       HS_BASIC_SITE           BSITE
+		 WHERE EWB.EWB_NO = PACKITEMS.EWB_NO
+		   AND BSITE.SITE_ID = EWB.SEND_SITE_ID
+		   AND PACKITEMS.STATUS = 1
+		   AND EWB.RD_STATUS = 1
+		   AND BSITE.RD_STATUS = 1
+		<if test="packBarCode != null and packBarCode != ''">
+			AND PACKITEMS.PACK_BAR_CODE = #{packBarCode}
+		</if>
+	</select>
+</mapper>

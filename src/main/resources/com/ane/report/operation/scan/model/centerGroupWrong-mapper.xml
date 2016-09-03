@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ane.report.operation.groupWrong.dao.ICenterGroupWrongDao">
+	<resultMap id="resultMap"
+		type="com.ane.report.operation.groupWrong.model.CenterGroupWrongVO">
+		<result column="ewb_no" property="ewbNo" jdbcType="VARCHAR" />
+		<result column="pack_bar_code" property="packBarCode" jdbcType="VARCHAR" />
+		<result column="group_site" property="groupSite" jdbcType="VARCHAR" />
+		<result column="should_split_site" property="shouldSplitSite"
+			jdbcType="VARCHAR" />
+		<result column="real_split_site" property="realSplitSite"
+			jdbcType="VARCHAR" />
+		<result column="scan_man" property="scanMan" jdbcType="VARCHAR" />
+		<result column="group_date" property="groupDate" jdbcType="TIMESTAMP" />
+		<result column="pack_spec" property="packSpec" jdbcType="VARCHAR" />
+		<result column="pack_type" property="packType" jdbcType="VARCHAR" />
+		<result column="ewb_num" property="ewbNum" jdbcType="INTEGER" />
+		<result column="wrong_num" property="wrongNum" jdbcType="INTEGER" />
+		<result column="send_site" property="sendSite" jdbcType="VARCHAR" />
+		<result column="send_center_site" property="sendCenterSite" jdbcType="VARCHAR" />
+	</resultMap>
+	<sql id="Base_Column_List">
+	 <![CDATA[
+       	ewb_no, pack_bar_code,
+		group_site,should_split_site,
+		real_split_site,scan_man,group_date,pack_spec,pack_type,ewb_num
+	    ]]>
+	</sql>
+	<!-- 查询错录单 -->
+	<select id="queryEwbByPage" resultMap="resultMap">
+		select
+		<include refid="Base_Column_List" />
+		from hs_opt_centergroup_wrong wrong
+		WHERE wrong.wrong_type=10 and
+		status=1
+		<if test="groupSiteId != null and groupSiteId != ''">
+			AND wrong.group_site_id = #{groupSiteId}
+		</if>
+		<if test="queryStartTime != null and queryStartTime != ''">
+			<![CDATA[ AND to_date(#{queryStartTime,jdbcType=VARCHAR},'yyyy-mm-dd') <= wrong.group_date]]>
+		</if>
+		<if test="queryEndTime != null and queryEndTime != ''">
+			<![CDATA[ AND to_date(#{queryEndTime,jdbcType=VARCHAR},'yyyy-mm-dd') + 1>= wrong.group_date]]>
+		</if>
+		ORDER BY WRONG.GROUP_DATE DESC
+	</select>
+	<!-- 查询错集包 -->
+	<select id="queryPackByPage" resultMap="resultMap">
+		SELECT
+		wrong.PACK_BAR_CODE,
+		COUNT (PACK_BAR_CODE) as WRONGNUM,
+		max(wrong.GROUP_SITE) as GROUP_SITE,
+		max(wrong.SHOULD_SPLIT_SITE) AS
+		SHOULD_SPLIT_SITE,
+		max(wrong.real_SPLIT_SITE) AS real_SPLIT_SITE,
+		max(
+		scan_man) AS scan_man,
+		max( group_date) AS group_date,
+		max( pack_spec)
+		AS pack_spec,
+		max( pack_type) as pack_type,
+		max( ewb_NUM ) AS ewb_NUM
+		FROM
+		hs_opt_centergroup_wrong wrong
+		WHERE
+		wrong.wrong_type=20
+		<if test="groupSiteId != null and groupSiteId != ''">
+			AND wrong.group_site_id = #{groupSiteId}
+		</if>
+		<if test="packSpec != null and packSpec != ''">
+			AND wrong.pack_spec = #{packSpec}
+		</if>
+		<if test="packType != null and packType != ''">
+			AND wrong.pack_type = #{packType}
+		</if>
+		<if test="queryStartTime != null and queryStartTime != ''">
+			<![CDATA[ AND to_date(#{queryStartTime,jdbcType=VARCHAR},'yyyy-mm-dd') <= wrong.group_date]]>
+		</if>
+		<if test="queryEndTime != null and queryEndTime != ''">
+			<![CDATA[ AND to_date(#{queryEndTime,jdbcType=VARCHAR},'yyyy-mm-dd') + 1>= wrong.group_date]]>
+		</if>
+		GROUP BY
+		wrong.PACK_BAR_CODE
+	</select>
+	<!-- 查询详细信息 -->
+	<select id="queryPackItemsByPage" resultMap="resultMap">
+		select
+		wrong.pack_bar_code,
+		wrong.ewb_no,
+		wrong.should_split_site,
+		wrong.send_site,
+		wrong.send_center_site
+		from hs_opt_centergroup_wrong
+		wrong
+		WHERE wrong.wrong_type=20 and
+		status=1
+		AND wrong.pack_bar_code =
+		#{packBarCode}
+	</select>
+	<!-- 获取分拨名称 -->
+	<select id="">
+		select s.site_name, s.site_id
+		  from hs_basic_site s
+ 		where site_id =
+       (select site_id from hs_basic_employee where employee_id = #{site});
+	</select>
+</mapper>

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:task="http://www.springframework.org/schema/task" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans	
+		http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+		http://www.springframework.org/schema/task
+        http://www.springframework.org/schema/task/spring-task-4.1.xsd
+        http://www.springframework.org/schema/tx 
+        http://www.springframework.org/schema/tx/spring-tx-4.1.xsd
+		http://www.springframework.org/schema/aop 
+		http://www.springframework.org/schema/aop/spring-aop-4.1.xsd 	 
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context.xsd">
+	<!-- 事务注解管理 -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+	
+	<!-- 数据源配置, 使用 druid 数据库连接池 -->
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" 
+			init-method="init" destroy-method="close">
+		<property name="driverClassName" value="${db.driverClassName}" />
+        <property name="url" value="${db.url}" />       
+ 		<property name="username" value="${db.username}" />
+        <property name="password" value="${db.password}" /> 
+        <!-- 初始化连接数量 -->
+        <property name="initialSize" value="${db.initialSize}" />
+        <!-- 最大并发连接数 -->
+        <property name="maxActive" value="${db.maxActive}" />
+        <!-- 最小空闲连接数 -->
+        <property name="minIdle" value="${db.minIdle}" />
+        <!-- 配置获取连接等待超时的时间 -->     
+        <property name="maxWait" value="${db.maxWait}" />
+        <!-- 超过时间限制是否回收 -->
+        <property name="removeAbandoned" value="${db.removeAbandoned}" />
+        <!-- 超过时间限制多长； -->
+        <property name="removeAbandonedTimeout" value="${db.removeAbandonedTimeout}" />
+        <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+        <property name="timeBetweenEvictionRunsMillis" value="${db.timeBetweenEvictionRunsMillis}" />
+        <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+        <property name="minEvictableIdleTimeMillis" value="${db.minEvictableIdleTimeMillis}" />
+        <!-- 用来检测连接是否有效的sql，要求是一个查询语句-->
+        <property name="validationQuery" value="${db.validationQuery}" />
+        <!-- 申请连接的时候检测 -->
+        <property name="testWhileIdle" value="${db.testWhileIdle}" />
+        <!-- 申请连接时执行validationQuery检测连接是否有效，配置为true会降低性能 -->
+        <property name="testOnBorrow" value="${db.testOnBorrow}" />
+        <!-- 归还连接时执行validationQuery检测连接是否有效，配置为true会降低性能  -->
+        <property name="testOnReturn" value="${db.testOnReturn}" />
+        <!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->
+        <property name="poolPreparedStatements" value="${db.poolPreparedStatements}" />    
+        <property name="maxPoolPreparedStatementPerConnectionSize" value="${db.maxPoolPreparedStatementPerConnectionSize}" />
+        <!--属性类型是字符串，通过别名的方式配置扩展插件，常用的插件有：                
+	                监控统计用的filter:stat
+	                日志用的filter:log4j
+               	   防御SQL注入的filter:wall -->
+      	 	<property name="filters" value="${db.filters}" />   
+      	 </bean>
+	
+	<!-- 配置druid监控spring jdbc -->
+	<bean id="stat-filter" class="com.alibaba.druid.filter.stat.StatFilter">
+		<property name="slowSqlMillis" value="3000" />
+		<!-- 统计慢SQL的开关 -->
+		<property name="logSlowSql" value="true" />
+		<!-- 在统计中合并同类SQL的开关 -->
+		<property name="mergeSql" value="true" />
+	</bean>
+	
+	<bean id="log-filter" class="com.alibaba.druid.filter.logging.Slf4jLogFilter">
+		<!-- 日志输出,输出可执行语句 -->
+		<property name="statementExecutableSqlLogEnable" value="false" />
+	</bean> 
+	
+	<bean id="druid-stat-interceptor"
+		class="com.alibaba.druid.support.spring.stat.DruidStatInterceptor">
+	</bean>
+	
+	<bean id="druid-stat-pointcut" 
+		class="org.springframework.aop.support.JdkRegexpMethodPointcut"
+		scope="prototype">
+		<property name="patterns">
+			<list>
+				<value>com.ane.report.*.service.impl.*</value>
+			</list>
+		</property>
+	</bean>
+	
+	<aop:config>
+		<aop:advisor advice-ref="druid-stat-interceptor"
+			pointcut-ref="druid-stat-pointcut" />
+	</aop:config>
+	
+	<!-- 配置SqlSessionFactoryBean -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="classpath:mybatis.xml"/>
+        <property name="mapperLocations">
+            <list>
+                <!-- 表示在包或以下所有目录中，以-mapper.xml结尾所有文件 -->
+                <value>classpath:/**/*-mapper.xml</value>
+            </list>
+        </property>
+    </bean>
+	    <!-- 数据映射器 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.ane.report"/>
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>  
+    </bean>
+	<bean name="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">     
+         <property name="dataSource" ref="dataSource"></property>
+   	</bean>  
+   	
+</beans>

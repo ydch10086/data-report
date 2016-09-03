@@ -1,0 +1,115 @@
+@CHARSET "UTF-8";
+
+	.webTitle{
+		width:100%;
+		color: #fff;
+		font-size: 48px;
+		text-align: center;
+		height:30%;
+		background-image: url("../image/loginbg.png");
+	}
+	.loginmain{
+		width: 1200px;
+		margin: auto;
+	}
+	.loginmain>img{
+		top: 20px;
+		position: absolute;
+	}
+	.loginForm{
+		width: 400px;
+		padding-top: 25px;
+		margin: auto;
+	}
+	.hint{
+		color: red;
+		font-size: 18px;
+	}
+	.userName{
+		width:348px;
+		font-size: 18px;
+		line-height:100%;
+		padding: 13.5px 25px;
+		border:1px solid #989DA0;
+		margin: 25px  1px  0px  1px;
+	}
+	.pwdDiv{
+		width:396px;
+		height:48px;
+		font-size: 18px;
+		border:1px solid #989DA0;
+		margin: 50px  1px  0px  1px;
+		overflow:hidden;
+	}
+	.userNamfocus{
+		border:1px solid #5069E0;
+		box-shadow:0 0 5px rgba(82, 104, 224, .5);
+	}
+	.pwdDiv span{
+		color:#989DA0;
+		display: block;
+		float: right;
+		padding: 0px 22px;
+		line-height:48px;
+		height:48px;
+		border-left:1px solid #989DA0;
+		cursor: pointer;
+	}
+	.passWord,.passWord1{
+		width:259px;
+		border:none;
+		border:0px;
+		line-height:100%;
+		padding: 13.5px 25px;
+		font-size: 18px;
+	}
+	.passWord1{
+		display: none;
+	}
+	.forgetPwd{
+		font-size: 14px;
+		margin:15px 0px 45px 0px;
+	}
+	
+	.forgetPwd a{
+		color: #989DA0;
+	} 
+	.subBtn{
+		width: 400px;
+		color: #fff;
+		font-size: 22px;
+		line-height: 50px;
+		border: none;
+		border-radius:4px;
+		background-color: #5069E0;
+		cursor: pointer;
+	}
+	.webInfo{
+		overflow:hidden;
+		width: 1200px;;
+		color: #fff;
+		bottom:0px;
+		line-height:30px;
+		font-size: 14px;
+		background: #000;
+		position:absolute;
+		z-index: 1;
+	}
+	.triangle-topleft {
+	    width: 0;
+	    height: 0;
+	    border-top: 30px solid #000;
+	    border-right: 30px solid #E68514;
+		float:right;
+	}
+	.bottomBg{
+		position:absolute;
+		width: 100%;
+		bottom:0px;
+		overflow: hidden;
+	}
+	.bottomBg li{
+		width:50%;
+		height:30px;
+		float: left;
+	}

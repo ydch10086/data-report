@@ -1,0 +1,954 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ane.report.operation.scan.dao.IScanDataDao">
+	<resultMap id="scanDataMap"
+		type="com.ane.report.operation.scan.model.ScanDataVO">
+		<result property="scanTypeName" column="SCANTYPE" />
+		<result property="packBarCode" column="PACKBARCODE" />
+		<result property="ewbNo" column="EWBNO" />
+		<result property="siteName" column="SITENAME" />
+		<result property="createBy" column="CREATEBY" />
+		<result property="scanTime" column="SCANTIME" />
+		<result property="weight" column="WEIGHT" />
+		<result property="createTime" column="CREATETIME" />
+		<result property="scanSourceName" column="SCAN_SOURCE" />
+		<result property="deviceCode" column="DEVICE_CODE" />
+		<result property="preSiteId" column="PREV_SITE_SITE" />
+	</resultMap>
+	<!-- 称重 -->
+	<select id="queryWeighScanByPage" resultMap="scanDataMap">
+		SELECT
+		'称重' AS SCANTYPE,
+		'' AS PACKBARCODE,
+		WEIGH.EWB_NO AS EWBNO,
+		WEIGH.SITE_NAME AS SITENAME,
+		WEIGH.CREATE_BY AS CREATEBY,
+		WEIGH.SCAN_TIME AS SCANTIME,
+		WEIGH.GOODS_WEIGH AS WEIGHT,
+		WEIGH.CREATE_TIME AS CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  WEIGH.SCAN_SOURCE) AS SCAN_SOURCE,
+		WEIGH.DEVICE_CODE AS DEVICE_CODE
+		from HS_OPT_WEIGH WEIGH
+		WHERE
+		WEIGH.STATUS=1
+		<if test="createById != null and createById != ''">
+			AND WEIGH.CREATE_BY_ID = #{createById}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND WEIGH.SITE_ID = #{siteId}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND WEIGH.EWB_NO = #{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= WEIGH.SCAN_TIME]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}  + 1>= WEIGH.SCAN_TIME]]>
+		</if>
+		ORDER BY SCANTIME DESC
+	</select>
+	<!-- 到件 -->
+	<select id="queryArriveScanByPage" resultMap="scanDataMap">
+		select
+		'到件' AS SCANTYPE,
+		HS_BASIC_EMPLOYEE AS PACKBARCODE,
+		arrive.EWB_NO AS EWBNO,
+		arrive.SITE_NAME AS SITENAME,
+		arrive.CREATE_BY AS CREATEBY,
+		arrive.SCAN_TIME AS SCANTIME,
+		arrive.GOODS_WEIGH AS WEIGHT,
+		arrive.CREATE_TIME AS CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  arrive.SCAN_SOURCE) AS SCAN_SOURCE,
+		arrive.DEVICE_CODE AS DEVICE_CODE
+		from hs_opt_reach arrive
+		LEFT JOIN HS_OPT_GROUP_PACK_ITEMS ITEMS ON ITEMS.EWB_NO = arrive.EWB_NO
+		WHERE
+		arrive.status=1
+		<if test="createById != null and createById != ''">
+			AND arrive.create_by_id = #{createById}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND arrive.ewb_no = #{ewbNo}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND arrive.site_id = #{siteId}
+		</if>
+		<if test="preSiteId != null and preSiteId != ''">
+			AND arrive.prev_site_id = #{preSiteId}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= arrive.scan_time]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE} + 1>= arrive.scan_time]]>
+		</if>
+		ORDER BY SCANTIME DESC
+	</select>
+
+	<select id="queryArrivePackScanByPage" resultMap="scanDataMap">
+		select
+		'到包' AS SCANTYPE,
+		arrivePack.bill_no AS PACKBARCODE,
+		arrivePack.Goods_Weigh AS WEIGHT,
+		ITEMS.Ewb_No AS EWBNO,
+		arrivePack.SITE_NAME AS SITENAME,
+		arrivePack.CREATE_BY AS CREATEBY,
+		arrivePack.SCAN_TIME AS SCANTIME,
+		arrivePack.CREATE_TIME AS CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =
+		arrivePack.SCAN_SOURCE) AS SCAN_SOURCE,
+		arrivePack.DEVICE_CODE AS DEVICE_CODE
+		from
+		hs_opt_reach_pack arrivePack
+		LEFT JOIN HS_OPT_GROUP_PACK_ITEMS ITEMS ON ITEMS.PACK_BAR_CODE =
+		arrivePack.Bill_No
+		WHERE arrivePack.status=1
+		<if test="createById != null and createById != ''">
+			AND arrivePack.create_by_id = #{createById}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND arrivePack.bill_no = #{ewbNo}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND arrivePack.site_id = #{siteId}
+		</if>
+		<if test="preSiteId != null and preSiteId != ''">
+			AND arrivePack.prev_site_id = #{preSiteId}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= arrivePack.scan_time ]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE} + 1>= arrivePack.scan_time]]>
+		</if>
+		ORDER BY SCANTIME DESC
+	</select>
+	<!--收件 -->
+	<select id="queryReceiveScanByPage" resultMap="scanDataMap">
+		select
+		'收件' AS SCANTYPE,
+		ITEMS.PACK_BAR_CODE AS PACKBARCODE,
+		r.weight AS WEIGHT,
+		r.ewb_no AS
+		EWBNO,
+		r.CREATED_TIME AS CREATETIME,
+		e.employee_name AS CREATEBY,
+		e.employee_id,
+		s.site_name AS SITENAME,
+		s.site_id,
+		r.scan_time AS
+		SCANTIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  r.scan_source_id) AS SCAN_SOURCE,
+		r.device_code AS DEVICE_CODE
+		from hs_basic_employee e
+		inner join
+		hs_opt_receive r
+		on e.employee_id =
+		r.receive_employee_id
+		inner join
+		hs_basic_site s
+		on s.site_id = r.site_id
+		LEFT JOIN HS_OPT_GROUP_PACK_ITEMS ITEMS ON ITEMS.EWB_NO = r.EWB_NO
+		WHERE r.rd_status = 1
+		<if test="createById != null and createById != ''">
+			AND e.employee_id = #{createById}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND r.ewb_no = #{ewbNo}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND r.site_id = #{siteId}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= r.scan_time]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE} + 1>= r.scan_time]]>
+		</if>
+		ORDER BY SCANTIME DESC
+	</select>
+	<!-- 问题件 -->
+	<select id="queryProblemMainScanByPage" resultMap="scanDataMap">
+		select
+		'问题件' AS SCANTYPE,
+		ITEMS.PACK_BAR_CODE AS PACKBARCODE,
+		'' AS WEIGHT,
+		problem.ewb_no
+		AS EWBNO,
+		problem.scan_site AS SITENAME,
+		problem.SCAN_MAN AS CREATEBY,
+		problem.SCAN_TIME AS SCANTIME,
+		problem.CREATED_DATE AS CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  problem.SCAN_SOURCE_ID) AS SCAN_SOURCE,
+		problem.DEVICE_CODE AS
+		DEVICE_CODE
+		from
+		hs_opt_problem problem 
+		LEFT JOIN HS_OPT_GROUP_PACK_ITEMS ITEMS ON ITEMS.EWB_NO = problem.EWB_NO
+		WHERE problem.rd_status=1
+		<if test="createById != null and createById != ''">
+			AND problem.SCAN_MAN_ID = #{createById}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND problem.ewb_no = #{ewbNo}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND problem.site_id = #{siteId}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= problem.scan_time]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE} + 1>= problem.scan_time]]>
+		</if>
+		ORDER BY SCANTIME DESC
+	</select>
+	<!-- 留仓件 -->
+	<select id="queryStayScanByPage" resultMap="scanDataMap">
+		select
+		'留仓件 ' AS SCANTYPE,
+		'' AS PACKBARCODE,
+		'' AS WEIGHT,
+		stay.bill_no
+		AS EWBNO,
+		stay.SITE_NAME AS SITENAME,
+		stay.CREATE_BY AS CREATEBY,
+		stay.SCAN_TIME AS SCANTIME,
+		stay.CREATE_TIME AS CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  stay.SCAN_SOURCE) AS SCAN_SOURCE,
+		stay.DEVICE_CODE AS DEVICE_CODE
+		from
+		hs_opt_stay_warehouse stay
+		WHERE stay.status=1 and stay.Bill_Type=0
+		<if test="createById != null and createById != ''">
+			AND stay.create_by_id = #{createById}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND stay.bill_no = #{ewbNo}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND stay.site_id = #{siteId}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= stay.scan_time]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE} + 1>= stay.scan_time]]>
+		</if>
+		ORDER BY SCANTIME DESC
+	</select>
+
+	<!-- 拆包 -->
+	<select id="querySplitPackScanByPage" resultMap="scanDataMap">
+		<![CDATA[SELECT '拆包' AS SCANTYPE,
+	       SPLITPACK.PACK_BAR_CODE AS PACKBARCODE,
+	       ITEM.EWB_NO AS EWBNO,
+	       ITEM.SITE_NAME AS SITENAME,
+	       ITEM.CREATE_BY AS CREATEBY,
+	       ITEM.SCAN_TIME AS SCANTIME,
+	       '' AS WEIGHT,
+	       ITEM.CREATE_TIME AS CREATETIME,
+	       (SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  ITEM.SCAN_SOURCE) AS SCAN_SOURCE,
+	       ITEM.DEVICE_CODE AS DEVICE_CODE
+		  FROM HS_OPT_SPLIT_PACK SPLITPACK
+		  LEFT JOIN HS_OPT_SPLIT_PACK_ITEMS ITEM
+		    ON SPLITPACK.SPLIT_PACK_ID = ITEM.SPLIT_PACK_ID
+		 WHERE SPLITPACK.STATUS <> 0]]>
+		<if test="createById != null and createById != ''">
+			AND ITEM.CREATE_BY_ID = #{createById}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND ITEM.SITE_ID = #{siteId}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND ITEM.EWB_NO = #{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= ITEM.SCAN_TIME]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}  + 1>= ITEM.SCAN_TIME]]>
+		</if>
+		ORDER BY SCANTIME DESC
+	</select>
+
+	<!-- 集包 -->
+	<select id="queryGroupPackScanByPage" resultMap="scanDataMap">
+		SELECT '集包' AS SCANTYPE,
+		ITEM.PACK_BAR_CODE AS PACKBARCODE,
+		ITEM.EWB_NO
+		AS EWBNO,
+		ITEM.SITE_NAME AS SITENAME,
+		ITEM.CREATE_BY AS CREATEBY,
+		ITEM.SCAN_TIME AS SCANTIME,
+		EWB.WEIGHT AS WEIGHT,
+		ITEM.CREATE_TIME AS
+		CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  ITEM.SCAN_SOURCE) AS SCAN_SOURCE,
+		ITEM.DEVICE_CODE AS
+		DEVICE_CODE
+		FROM HS_OPT_GROUP_PACK_ITEMS ITEM
+		LEFT JOIN HS_OPT_EWB EWB
+		ON ITEM.EWB_NO = EWB.EWB_NO
+		WHERE ITEM.STATUS = 1
+		<if test="createById != null and createById != ''">
+			AND ITEM.CREATE_BY_ID = #{createById}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND ITEM.SITE_ID = #{siteId}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND ITEM.EWB_NO = #{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= ITEM.SCAN_TIME]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}  + 1>= ITEM.SCAN_TIME]]>
+		</if>
+		ORDER BY SCANTIME DESC
+	</select>
+
+	<select id="queryDispatchScanByPage" resultMap="scanDataMap">
+		select
+		'派件 ' AS SCANTYPE,
+		ITEMS.PACK_BAR_CODE AS PACKBARCODE,
+		'' AS WEIGHT,
+		d.ewb_No AS
+		EWBNO,
+		d.SITE_NAME AS SITENAME,
+		d.CREATE_BY AS CREATEBY,
+		d.SCAN_TIME AS
+		SCANTIME,
+		d.CREATE_TIME AS CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  d.SCAN_SOURCE) AS SCAN_SOURCE,
+		d.DEVICE_CODE AS DEVICE_CODE
+		from
+		HS_OPT_DELIVERY d
+		LEFT JOIN HS_OPT_GROUP_PACK_ITEMS ITEMS ON ITEMS.EWB_NO = d.EWB_NO
+		where d.STATUS=1
+		<if test="ewbNo!=null and ewbNo!=''">
+			AND d.EWB_NO=#{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= d.SCAN_TIME]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE} +1 >= d.SCAN_TIME]]>
+		</if>
+		<if test="siteId!=null and siteId!=''">
+			AND d.site_Id = #{siteId}
+		</if>
+		<if test="deliverySiteId != null and deliverySiteId != ''">
+			AND d.DELIVERY_MAN_ID = #{deliverySiteId}
+		</if>
+		<if test="createById!=null and createById!=''">
+			AND d.CREATE_BY_ID = #{createById}
+		</if>
+		ORDER BY SCANTIME DESC
+	</select>
+
+	<select id="querySendScanByPage" resultMap="scanDataMap">
+		SELECT
+		'发件 ' AS SCANTYPE,
+		ITEMS.PACK_BAR_CODE AS PACKBARCODE,
+		d.EWB_NO AS EWBNO,
+		d.WEIGHT AS WEIGHT,
+		e.employee_name AS CREATEBY,
+		e.employee_id CREATEBYID,
+		s.site_name AS SITENAME,
+		s.site_id SITEID,
+		d.SCAN_TIME AS SCANTIME,
+		d.CREATED_TIME AS CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  d.SCAN_SOURCE_ID) AS SCAN_SOURCE,
+		d.DEVICE_CODE AS DEVICE_CODE
+		FROM HS_OPT_SEND d
+		LEFT JOIN HS_BASIC_SITE
+		s ON s.SITE_ID=d.SITE_ID
+		LEFT JOIN HS_BASIC_EMPLOYEE e ON e.EMPLOYEE_ID =d.CREATED_BY
+		LEFT JOIN HS_BASIC_SITE  ON S.SITE_ID=d.DISPATCH_SITE_ID
+		LEFT JOIN HS_OPT_GROUP_PACK_ITEMS ITEMS ON ITEMS.EWB_NO = d.EWB_NO
+		WHERE d.rd_STATUS=1
+		<if test="siteId!=null and siteId!=''">
+			AND s.site_Id = #{siteId}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= d.SCAN_TIME]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE} +1 >= d.SCAN_TIME]]>
+		</if>
+		<if test="ewbNo!=null and ewbNo!=''">
+			AND d.EWB_NO=#{ewbNo}
+		</if>
+		<if test="descSiteId != null and descSiteId !=''">
+			AND d.NEXT_SITE_ID =#{descSiteId}
+		</if>
+		<if test="createById != null and createById !=''">
+			AND e.employee_id = #{createById}
+		</if>
+		ORDER BY SCANTIME DESC
+	</select>
+	<!--签收 -->
+	<select id="querySignScanByPage" resultMap="scanDataMap">
+		SELECT
+		'签收 ' AS SCANTYPE,
+		ITEMS.PACK_BAR_CODE AS PACKBARCODE,
+		S.EWB_NO AS EWBNO,
+		'' AS WEIGHT,
+		S.SITE_NAME as
+		SITENAME,
+		E.EMPLOYEE_NAME as CREATEBY,
+		S.SIGN_TIME SCANTIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  S.SCAN_SOURCE_ID) AS SCAN_SOURCE,
+		S.DEVICE_CODE DEVICE_CODE
+		FROM HS_OPT_SIGN
+		S
+		LEFT JOIN
+		HS_OPT_SEND S2
+		ON S.EWB_NO = S2.EWB_NO
+		LEFT JOIN HS_BASIC_SITE
+		B2
+		ON
+		S2.SITE_ID = B2.SITE_ID
+		LEFT JOIN HS_BASIC_EMPLOYEE E
+		ON
+		S.CREATED_BY =
+		E.EMPLOYEE_ID
+		LEFT JOIN HS_BASIC_SITE B
+		ON B.SITE_ID =
+		S.SITE_ID
+		LEFT
+		JOIN HS_OPT_DELIVERY D
+		ON D.EWB_NO = S.EWB_NO
+		LEFT JOIN
+		HS_BASIC_EMPLOYEE E2
+		ON D.DELIVERY_MAN_ID = E2.EMPLOYEE_ID
+		LEFT JOIN HS_OPT_GROUP_PACK_ITEMS ITEMS ON ITEMS.EWB_NO = S.EWB_NO
+		WHERE
+		S.RD_STATUS = 1
+		<if test="ewbNo != null and ewbNo != ''">
+			AND S.EWB_NO=#{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= S.SIGN_TIME]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE} +1 >= S.SIGN_TIME]]>
+		</if>
+		<if test="siteName != null and siteName != ''">
+			AND S.site_id = #{siteId}
+		</if>
+		<if test="createById != null and createById != ''">
+			AND E.EMPLOYEE_ID=#{createById}
+		</if>
+	</select>
+
+	<!--卸车 -->
+	<select id="queryUnloadScanByPage" resultMap="scanDataMap">
+		SELECT '卸车' AS SCANTYPE,
+	    ITEM.PACK_BAR_CODE AS PACKBARCODE,
+	    ITEMS.Ewb_No AS EWBNO,
+	    ITEM.UNLOAD_SITE AS SITENAME,
+	    ITEM.CREATE_BY AS CREATEBY,
+	    ITEM.SCAN_TIME AS SCANTIME,
+	    0 AS WEIGHT,
+	    ITEM.CREATE_TIME AS CREATETIME,
+	    (SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  ITEM.SCAN_SOURCE) AS SCAN_SOURCE,
+	    ITEM.DEVICE_CODE AS DEVICE_CODE
+	    FROM HS_OPT_UNLOADCAR_ITEMS ITEM
+	    LEFT JOIN HS_OPT_GROUP_PACK_ITEMS ITEMS ON ITEMS.PACK_BAR_CODE = ITEM.PACK_BAR_CODE
+	    WHERE ITEM.STATUS = 1
+		<if test="ewbNo!=null and ewbNo!=''">
+			AND ITEM.PACK_BAR_CODE=#{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= ITEM.SCAN_TIME]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}  + 1>= ITEM.SCAN_TIME]]>
+		</if>
+		<if test="siteId!=null and siteId!=''">
+			AND ITEM.UNLOAD_SITE_ID = #{siteId}
+		</if>
+		<if test="createById!=null and createById!=''">
+			AND ITEM.CREATE_BY_ID = #{createById}
+		</if>
+		ORDER BY SCANTIME DESC
+	</select>
+
+	<!--装车 -->
+	<select id="queryLoadingScanByPage" resultMap="scanDataMap">
+		SELECT '装车' AS SCANTYPE,
+		LOADCAR.PACK_BAR_CODE AS PACKBARCODE,
+		'' AS EWBNO,
+		LOADCAR.LEAVE_SISTE AS SITENAME,
+		LOADCAR.CREATE_BY AS CREATEBY,
+		LOADCAR.SCAN_TIME AS SCANTIME,
+		0 AS WEIGHT,
+		LOADCAR.CREATE_TIME AS CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  LOADCAR.SCAN_SOURCE) AS SCAN_SOURCE,
+		LOADCAR.DEVICE_CODE AS DEVICE_CODE
+		FROM HS_OPT_LOADCAR LOADCAR
+		WHERE LOADCAR.STATUS = 1
+		<if test="ewbNo!=null and ewbNo!=''">
+			AND LOADCAR.PACK_BAR_CODE=#{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= LOADCAR.SCAN_TIME]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}  + 1>= LOADCAR.SCAN_TIME]]>
+		</if>
+		<if test="siteId!=null and siteId!=''">
+			AND LOADCAR.LEAVE_SISTE_ID = #{siteId}
+		</if>
+		<if test="createById!=null and createById!=''">
+			AND LOADCAR.CREATE_BY_ID = #{createById}
+		</if>
+		ORDER BY SCANTIME DESC
+	</select>
+
+	<!-- 全部 -->
+	<select id="queryScanDataAllByPage" resultMap="scanDataMap">
+		SELECT
+		'称重' AS SCANTYPE,
+		'' AS PACKBARCODE,
+		WEIGH.EWB_NO AS EWBNO,
+		WEIGH.SITE_NAME AS SITENAME,
+		WEIGH.CREATE_BY AS CREATEBY,
+		WEIGH.SCAN_TIME AS SCANTIME,
+		WEIGH.GOODS_WEIGH AS WEIGHT,
+		WEIGH.CREATE_TIME AS CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  WEIGH.SCAN_SOURCE) AS SCAN_SOURCE,
+		WEIGH.DEVICE_CODE AS DEVICE_CODE
+		from HS_OPT_WEIGH WEIGH
+		WHERE
+		WEIGH.STATUS=1
+		<if test="createById != null and createById != ''">
+			AND WEIGH.CREATE_BY_ID = #{createById}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND WEIGH.SITE_ID = #{siteId}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND WEIGH.EWB_NO = #{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= WEIGH.SCAN_TIME]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}  + 1>= WEIGH.SCAN_TIME]]>
+		</if>
+
+		UNION ALL
+		SELECT '到件' AS SCANTYPE,
+		ITEMS.PACK_BAR_CODE AS PACKBARCODE,
+		ARRIVE.EWB_NO AS EWBNO,
+		ARRIVE.SITE_NAME AS SITENAME,
+		ARRIVE.CREATE_BY AS CREATEBY,
+		ARRIVE.SCAN_TIME AS SCANTIME,
+		ARRIVE.GOODS_WEIGH AS WEIGHT,
+		ARRIVE.CREATE_TIME AS CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  ARRIVE.SCAN_SOURCE) AS SCAN_SOURCE,
+		ARRIVE.DEVICE_CODE AS DEVICE_CODE
+		FROM HS_OPT_REACH ARRIVE
+		LEFT JOIN HS_OPT_GROUP_PACK_ITEMS ITEMS ON ITEMS.EWB_NO = ARRIVE.EWB_NO
+		WHERE ARRIVE.STATUS
+		= 1
+		<if test="createById != null and createById != ''">
+			AND arrive.create_by_id = #{createById}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND arrive.ewb_no = #{ewbNo}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND arrive.site_id = #{siteId}
+		</if>
+		<if test="preSiteId != null and preSiteId != ''">
+			AND arrive.prev_site_id = #{preSiteId}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= arrive.scan_time]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE} + 1>= arrive.scan_time]]>
+		</if>
+		UNION ALL
+		SELECT '到包' AS SCANTYPE,
+		ARRIVEPACK.BILL_NO AS PACKBARCODE,
+		ITEMS.EWB_NO
+		AS EWBNO,
+		ARRIVEPACK.SITE_NAME AS SITENAME,
+		ARRIVEPACK.CREATE_BY AS
+		CREATEBY,
+		ARRIVEPACK.SCAN_TIME AS SCANTIME,
+		0 AS WEIGHT,
+		ARRIVEPACK.CREATE_TIME AS CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  ARRIVEPACK.SCAN_SOURCE) AS SCAN_SOURCE,
+		ARRIVEPACK.DEVICE_CODE AS DEVICE_CODE
+		FROM
+		HS_OPT_REACH_PACK ARRIVEPACK
+		LEFT JOIN HS_OPT_GROUP_PACK_ITEMS ITEMS ON ITEMS.PACK_BAR_CODE =
+		ARRIVEPACK.Bill_No
+		WHERE ARRIVEPACK.STATUS = 1
+		<if test="createById != null and createById != ''">
+			AND arrivePack.create_by_id = #{createById}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND arrivePack.bill_no = #{ewbNo}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND arrivePack.site_id = #{siteId}
+		</if>
+		<if test="preSiteId != null and preSiteId != ''">
+			AND arrivePack.prev_site_id = #{preSiteId}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= arrivePack.scan_time]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE} + 1>= arrivePack.scan_time]]>
+		</if>
+		UNION ALL
+		SELECT '收件' AS SCANTYPE,
+		ITEMS.PACK_BAR_CODE AS PACKBARCODE,
+		R.EWB_NO AS EWBNO,
+		S.SITE_NAME AS SITENAME,
+		E.EMPLOYEE_NAME AS CREATEBY,
+		R.SCAN_TIME AS
+		SCANTIME,
+		0 AS WEIGHT,
+		R.CREATED_TIME AS CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  R.SCAN_SOURCE_ID) AS SCAN_SOURCE,
+		R.DEVICE_CODE AS DEVICE_CODE
+		FROM HS_BASIC_EMPLOYEE E
+		INNER
+		JOIN HS_OPT_RECEIVE R
+		ON E.EMPLOYEE_ID = R.RECEIVE_EMPLOYEE_ID
+		INNER
+		JOIN HS_BASIC_SITE S
+		ON S.SITE_ID = R.SITE_ID
+		LEFT JOIN HS_OPT_GROUP_PACK_ITEMS ITEMS ON ITEMS.EWB_NO = R.EWB_NO
+		WHERE R.RD_STATUS = 1
+		<if test="createById != null and createById != ''">
+			AND e.employee_id = #{createById}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND r.ewb_no = #{ewbNo}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND r.site_id = #{siteId}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= r.scan_time]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE} + 1>= r.scan_time]]>
+		</if>
+		UNION ALL
+		SELECT '问题件' AS SCANTYPE,
+		    ITEMS.PACK_BAR_CODE AS PACKBARCODE,
+		    PROBLEM.EWB_NO AS
+		    EWBNO,
+		    PROBLEM.SCAN_SITE AS SITENAME,
+		    PROBLEM.SCAN_MAN AS CREATEBY,
+		    PROBLEM.SCAN_TIME AS SCANTIME,
+		    0 AS WEIGHT,
+		    PROBLEM.CREATED_DATE AS
+		    CREATETIME,
+		    (SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  PROBLEM.SCAN_SOURCE_ID) AS SCAN_SOURCE,
+		    PROBLEM.DEVICE_CODE
+		    AS DEVICE_CODE
+		    FROM HS_OPT_PROBLEM PROBLEM
+		    LEFT JOIN HS_OPT_GROUP_PACK_ITEMS ITEMS ON ITEMS.EWB_NO = PROBLEM.EWB_NO
+		    WHERE PROBLEM.RD_STATUS = 1
+		<if test="createById != null and createById != ''">
+			AND problem.SCAN_MAN_ID = #{createById}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND problem.ewb_no = #{ewbNo}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND problem.site_id = #{siteId}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= problem.scan_time]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE} + 1>= problem.scan_time]]>
+		</if>
+		UNION ALL
+		SELECT '留仓件 ' AS SCANTYPE,
+		    ITEMS.PACK_BAR_CODE AS PACKBARCODE,
+		    STAY.BILL_NO AS EWBNO,
+		    STAY.SITE_NAME AS SITENAME,
+		    STAY.CREATE_BY AS CREATEBY,
+		    STAY.SCAN_TIME AS SCANTIME,
+		    0 AS WEIGHT,
+		    STAY.CREATE_TIME AS CREATETIME,
+		    (SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  STAY.SCAN_SOURCE) AS SCAN_SOURCE,
+		    STAY.DEVICE_CODE AS DEVICE_CODE
+		    FROM
+		    HS_OPT_STAY_WAREHOUSE STAY
+		    LEFT JOIN HS_OPT_GROUP_PACK_ITEMS ITEMS ON ITEMS.Ewb_No = STAY.BILL_NO 
+		    WHERE STAY.STATUS = 1 AND STAY.Bill_Type=0
+		<if test="createById != null and createById != ''">
+			AND stay.create_by_id = #{createById}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND stay.bill_no = #{ewbNo}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND stay.site_id = #{siteId}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= stay.scan_time]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE} + 1>= stay.scan_time]]>
+		</if>
+		UNION ALL
+		SELECT '拆包' AS SCANTYPE,
+		SPLITPACK.PACK_BAR_CODE AS PACKBARCODE,
+		cast(ITEM.Ewb_No as varchar2(100)) AS EWBNO,
+		cast(ITEM.Site_Name as varchar2(200)) AS SITENAME,
+		cast(ITEM.CREATE_BY as varchar2(100)) AS CREATEBY,
+		ITEM.SCAN_TIME AS SCANTIME,
+		0 AS WEIGHT,
+		ITEM.CREATE_TIME AS CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  ITEM.SCAN_SOURCE) AS SCAN_SOURCE,
+		ITEM.DEVICE_CODE AS DEVICE_CODE
+		FROM HS_OPT_SPLIT_PACK SPLITPACK
+		LEFT JOIN HS_OPT_SPLIT_PACK_ITEMS ITEM
+		ON SPLITPACK.SPLIT_PACK_ID = ITEM.SPLIT_PACK_ID
+		WHERE <![CDATA[SPLITPACK.STATUS <> 0]]>
+		<if test="createById != null and createById != ''"> AND ITEM.CREATE_BY_ID
+			= #{createById}
+		</if>
+		<if test="siteId != null and siteId != ''"> AND ITEM.SITE_ID
+			= #{siteId}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''"> AND ITEM.EWB_NO
+			= #{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''"> 
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= ITEM.SCAN_TIME]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''"> 
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE} + 1>= ITEM.SCAN_TIME]]>
+		</if>
+		UNION ALL
+		SELECT '集包' AS SCANTYPE,
+		ITEM.PACK_BAR_CODE AS PACKBARCODE,
+		ITEM.EWB_NO AS EWBNO,
+		ITEM.SITE_NAME AS SITENAME,
+		ITEM.CREATE_BY AS
+		CREATEBY,
+		ITEM.SCAN_TIME AS SCANTIME,
+		EWB.WEIGHT AS WEIGHT,
+		ITEM.CREATE_TIME AS CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  ITEM.SCAN_SOURCE) AS SCAN_SOURCE,
+		ITEM.DEVICE_CODE AS DEVICE_CODE
+		FROM HS_OPT_GROUP_PACK_ITEMS ITEM
+		LEFT
+		JOIN HS_OPT_EWB EWB
+		ON ITEM.EWB_NO = EWB.EWB_NO
+		WHERE ITEM.STATUS = 1
+		<if test="createById != null and createById != ''">
+			AND ITEM.CREATE_BY_ID = #{createById}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND ITEM.SITE_ID = #{siteId}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND ITEM.EWB_NO = #{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= ITEM.SCAN_TIME]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}  + 1>= ITEM.SCAN_TIME]]>
+		</if>
+		UNION ALL
+		SELECT '派件 ' AS SCANTYPE,
+		ITEMS.PACK_BAR_CODE AS PACKBARCODE,
+		D.EWB_NO AS EWBNO,
+		CAST(D.SITE_NAME AS VARCHAR2(200)) AS SITENAME,
+		CAST(D.CREATE_BY AS
+		VARCHAR2(100)) AS CREATEBY,
+		D.SCAN_TIME AS SCANTIME,
+		0 AS WEIGHT,
+		D.CREATE_TIME AS CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  D.SCAN_SOURCE) AS SCAN_SOURCE,
+		D.DEVICE_CODE AS DEVICE_CODE
+		FROM HS_OPT_DELIVERY D
+		LEFT JOIN HS_OPT_GROUP_PACK_ITEMS ITEMS ON ITEMS.EWB_NO = D.EWB_NO
+		WHERE D.STATUS = 1
+		<if test="ewbNo!=null and ewbNo!=''">
+			AND D.EWB_NO=#{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= D.SCAN_TIME]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}+1 >= D.SCAN_TIME]]>
+		</if>
+		<if test="siteId!=null and siteId!=''">
+			AND D.SITE_ID = #{siteId}
+		</if>
+		<if test="deliverySiteId != null and deliverySiteId != ''">
+			AND D.DELIVERY_MAN_ID = #{deliverySiteId}
+		</if>
+		<if test="createById!=null and createById!=''">
+			AND D.CREATE_BY_ID = #{createById}
+		</if>
+		UNION ALL
+		SELECT '发件 ' AS SCANTYPE,
+		ITEMS1.PACK_BAR_CODE AS PACKBARCODE,
+		D.EWB_NO AS EWBNO,
+		S.SITE_NAME AS SITENAME,
+		E.EMPLOYEE_NAME AS CREATEBY,
+		D.SCAN_TIME AS
+		SCANTIME,
+		D.WEIGHT AS WEIGHT,
+		D.CREATED_TIME AS CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  D.SCAN_SOURCE_ID) AS SCAN_SOURCE,
+		D.DEVICE_CODE AS DEVICE_CODE
+		FROM
+		HS_OPT_SEND D
+		LEFT JOIN HS_BASIC_SITE S
+		ON S.SITE_ID = D.SITE_ID
+		LEFT
+		JOIN HS_BASIC_EMPLOYEE E
+		ON E.EMPLOYEE_ID = D.CREATED_BY
+		LEFT JOIN
+		HS_BASIC_SITE
+		ON S.SITE_ID = D.DISPATCH_SITE_ID
+		LEFT JOIN HS_OPT_GROUP_PACK_ITEMS ITEMS1 ON ITEMS1.EWB_NO = D.EWB_NO
+		WHERE D.RD_STATUS = 1
+		<if test="siteId!=null and siteId!=''">
+			AND s.site_Id = #{siteId}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= D.SCAN_TIME]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}+1 >= D.SCAN_TIME]]>
+		</if>
+		<if test="ewbNo!=null and ewbNo!=''">
+			AND D.EWB_NO=#{ewbNo}
+		</if>
+		<if test="descSiteId != null and descSiteId !=''">
+			AND D.NEXT_SITE_ID =#{descSiteId}
+		</if>
+		<if test="createById != null and createById !=''">
+			AND D.CREATED_BY = #{createById}
+		</if>
+		UNION ALL
+		SELECT '签收 ' AS SCANTYPE,
+		ITEMS.PACK_BAR_CODE AS PACKBARCODE,
+		S.EWB_NO AS EWBNO,
+		S.SITE_NAME AS SITENAME,
+		E.EMPLOYEE_NAME AS CREATEBY,
+		S.SIGN_TIME AS SCANTIME,
+		0 AS WEIGHT,
+		S.CREATED_TIME AS CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  S.SCAN_SOURCE_ID) AS SCAN_SOURCE,
+		S.DEVICE_CODE DEVICE_CODE
+		FROM HS_OPT_SIGN S
+		LEFT JOIN
+		HS_OPT_SEND S2
+		ON S.EWB_NO = S2.EWB_NO
+		LEFT JOIN HS_BASIC_SITE B2
+		ON
+		S2.SITE_ID = B2.SITE_ID
+		LEFT JOIN HS_BASIC_EMPLOYEE E
+		ON S.CREATED_BY =
+		E.EMPLOYEE_ID
+		LEFT JOIN HS_BASIC_SITE B
+		ON B.SITE_ID = S.SITE_ID
+		LEFT
+		JOIN HS_OPT_DELIVERY D
+		ON D.EWB_NO = S.EWB_NO
+		LEFT JOIN
+		HS_BASIC_EMPLOYEE E2
+		ON D.DELIVERY_MAN_ID = E2.EMPLOYEE_ID
+		LEFT JOIN HS_OPT_GROUP_PACK_ITEMS ITEMS ON ITEMS.EWB_NO = S.EWB_NO
+		WHERE
+		S.RD_STATUS = 1
+		<if test="ewbNo != null and ewbNo != ''">
+			AND S.EWB_NO=#{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= S.SIGN_TIME]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}+1 >= S.SIGN_TIME]]>
+		</if>
+		<if test="siteName != null and siteName != ''">
+			AND S.SITE_ID = #{siteName}
+		</if>
+		<if test="createById != null and createById != ''">
+			AND E.EMPLOYEE_ID=#{createById}
+		</if>
+		UNION ALL
+		SELECT '卸车' AS SCANTYPE,
+		ITEM.PACK_BAR_CODE AS PACKBARCODE,
+		ITEMS.Ewb_No AS EWBNO,
+		ITEM.UNLOAD_SITE AS SITENAME,
+		ITEM.CREATE_BY AS CREATEBY,
+		ITEM.SCAN_TIME AS SCANTIME,
+		0 AS WEIGHT,
+		ITEM.CREATE_TIME AS CREATETIME,
+		(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  ITEM.SCAN_SOURCE) AS SCAN_SOURCE,
+		ITEM.DEVICE_CODE AS DEVICE_CODE
+		FROM HS_OPT_UNLOADCAR_ITEMS ITEM
+		LEFT JOIN HS_OPT_GROUP_PACK_ITEMS ITEMS ON ITEMS.PACK_BAR_CODE = ITEM.PACK_BAR_CODE
+		WHERE ITEM.STATUS = 1
+		<if test="ewbNo!=null and ewbNo!=''">
+			AND ITEM.PACK_BAR_CODE=#{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= ITEM.SCAN_TIME]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}+1 >= ITEM.SCAN_TIME]]>
+		</if>
+		<if test="siteId!=null and siteId!=''">
+			AND ITEM.UNLOAD_SITE_ID = #{siteId}
+		</if>
+		<if test="createById!=null and createById!=''">
+			AND ITEM.CREATE_BY_ID = #{createById}
+		</if>
+		UNION ALL
+		SELECT '装车' AS SCANTYPE,
+    LOADCAR.PACK_BAR_CODE AS PACKBARCODE,
+    ITEMS.EWB_NO AS EWBNO,
+    LOADCAR.LEAVE_SISTE AS SITENAME,
+    LOADCAR.CREATE_BY AS CREATEBY,
+    LOADCAR.SCAN_TIME AS SCANTIME,
+    0 AS WEIGHT,
+    LOADCAR.CREATE_TIME AS CREATETIME,
+    (SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  LOADCAR.SCAN_SOURCE) AS SCAN_SOURCE,
+    LOADCAR.DEVICE_CODE AS DEVICE_CODE
+    FROM HS_OPT_LOADCAR LOADCAR
+    LEFT JOIN HS_OPT_GROUP_PACK_ITEMS ITEMS ON ITEMS.PACK_BAR_CODE = LOADCAR.PACK_BAR_CODE
+    WHERE LOADCAR.STATUS = 1
+		<if test="ewbNo!=null and ewbNo!=''">
+			AND LOADCAR.PACK_BAR_CODE=#{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= LOADCAR.SCAN_TIME]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}+1 >= LOADCAR.SCAN_TIME]]>
+		</if>
+		<if test="siteId!=null and siteId!=''">
+			AND LOADCAR.LEAVE_SISTE_ID = #{siteId}
+		</if>
+		<if test="createById!=null and createById!=''">
+			AND LOADCAR.CREATE_BY_ID = #{createById}
+		</if>
+	</select>
+</mapper>

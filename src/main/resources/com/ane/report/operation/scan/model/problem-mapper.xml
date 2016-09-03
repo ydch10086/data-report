@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ane.report.operation.scan.dao.IProblemScanDao">
+	<resultMap id="resultMap" type="com.ane.report.operation.scan.model.ProblemScanVO">
+		<result column="create_by" property="createBy" jdbcType="VARCHAR" />
+		<result column="create_by_id" property="createById" jdbcType="INTEGER" />
+		<result column="site_name" property="siteName" jdbcType="VARCHAR" />
+		<result column="site_id" property="siteId" jdbcType="INTEGER" />
+		<result column="scan_time" property="scanTime" jdbcType="TIMESTAMP" />
+		<result column="scan_source" property="scanSource"
+			jdbcType="INTEGER" />
+		<result column="device_code" property="deviceCode" jdbcType="VARCHAR" />
+		<result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+		<result column="status" property="status" jdbcType="INTEGER" />
+		<result column="ewb_no" property="ewbNo" jdbcType="VARCHAR" />
+	</resultMap>
+	<sql id="Base_Column_List">
+	 <![CDATA[
+        	create_by, create_by_id,
+		site_name,site_id,
+		scan_time,scan_source,device_code,ewb_no,status,create_time
+	    ]]>
+	</sql>
+	<select id="queryByPage" parameterType="com.ane.report.operation.scan.model.ProblemScanVO" resultMap="resultMap">
+		select
+		<include refid="Base_Column_List" />
+		from hs_opt_problem 
+		WHERE status=1
+		<if test="createById != null and createById != ''">
+			AND create_by_id = #{createById}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND ewb_no = #{ewbNo}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND site_id = #{siteId}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND to_date(#{scanStartTime,jdbcType=VARCHAR},'yyyy-mm-dd') <= scan_time]]> 
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND to_date(#{scanEndTime,jdbcType=VARCHAR},'yyyy-mm-dd') + 1>= scan_time]]>
+		</if>
+		ORDER BY SCAN_TIME DESC
+	</select>
+</mapper>

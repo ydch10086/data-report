@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ane.report.operation.scan.dao.IDispatchScanDao">
+	<resultMap id="dispatchScanResult" type="com.ane.report.operation.scan.model.DispatchScanVO">
+		<result property="ewbNo" column="EWB_NO"/>
+		<result property="deliveryId" column="DELIVERY_ID"/>
+		<result property="scanTime" column="SCAN_TIME"/>
+		<result property="deliveryMan" column="DELIVERY_MAN"/>
+		<result property="deliveryManId" column="DELIVERY_MAN_ID"/>
+		<result property="deliveryType" column="DELIVERY_TYPE"/>
+		<result property="createdBy" column="CREATE_BY"/>
+		<result property="createById" column="CREATE_BY_ID"/>
+		<result property="siteId" column="SITE_ID"/>
+		<result property="siteName" column="SITE_NAME"/>
+		<result property="scanSource" column="SCAN_SOURCE"/>
+		<result property="dictName" column="DICT_NAME"/>
+		<result property="deviceCode" column="DEVICE_CODE"/>
+		<result property="status" column="STATUS"/>
+		<result property="createdTime" column="CREATE_TIME"/>
+	</resultMap>
+	<sql id="dispatchScanSql">
+	 <![CDATA[
+        	S.EWB_NO,
+        	S.DELIVERY_ID,
+        	S.SCAN_TIME,
+        	S.DELIVERY_MAN,
+        	S.DELIVERY_MAN_ID,
+        	S.DELIVERY_TYPE,
+        	S.CREATE_BY,
+        	S.CREATE_BY_ID,
+        	S.SITE_ID,
+        	S.SITE_NAME,
+        	S.DEVICE_CODE,
+        	S.STATUS,
+        	S.CREATE_TIME
+	    ]]>
+	</sql>
+	<select id="queryDispatchScanByPage" resultMap="dispatchScanResult" >
+		select BD.DICT_NAME,<include refid="dispatchScanSql"/> from HS_OPT_DELIVERY S
+		LEFT JOIN HS_BASIC_DICT BD ON BD.DICT_ID = S.SCAN_SOURCE
+		where STATUS=1
+		<if test="ewbNo!=null and ewbNo!=''">
+		 	AND EWB_NO=#{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND to_date(#{scanStartTime,jdbcType=DATE},'yyyy-mm-dd hh24:mi:ss') <= SCAN_TIME]]> 
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND to_date(#{scanEndTime,jdbcType=DATE},'yyyy-mm-dd hh24:mi:ss')+1 >= SCAN_TIME]]>
+		</if>
+		<if test="siteName!=null and siteName!=''">
+			AND SITE_ID = #{siteName}
+		</if>
+		<if test="deliveryMan != null and deliveryMan != ''">
+			AND DELIVERY_MAN = #{deliveryMan}
+		</if>
+		<if test="createdBy!=null and createdBy!=''">
+			AND CREATE_BY_ID = #{createdBy}
+		</if>
+		ORDER BY S.SCAN_TIME DESC
+	</select>
+</mapper>

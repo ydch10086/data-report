@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ane.report.operation.scan.dao.ISendPackScanDao">
+	<resultMap type="com.ane.report.operation.scan.model.SendPackScanVO" id="sendPackScanResult">
+		<result property="billNo" column="BILL_NO"/>
+		<result property="packBarCode" column="PACK_BAR_CODE"/>
+		<result property="siteName" column="SITE_NAME"/>
+		<result property="createBy" column="CREATE_BY"/>
+		<result property="scanTime" column="SCAN_TIME"/>
+		<result property="nextSiteName" column="NEXT_SITE_NAME"/>
+		<result property="dictName" column="DICT_NAME"/>
+		<result property="deviceCode" column="DEVICE_CODE"/>
+		<result property="siteId" column="SITE_ID"/>
+		<result property="nextSiteId" column="NEXT_SITE_ID"/>
+		<result property="createById" column="CREATE_BY_ID"/>
+	</resultMap>
+	<sql id="sendPackScanSql">
+		BILL_NO,
+		PACK_BAR_CODE,
+		SITE_NAME,
+		CREATE_BY,
+		SCAN_TIME,
+		NEXT_SITE_NAME,
+		DEVICE_CODE
+	</sql>
+	<select id="querySendPackScanByPage" resultMap="sendPackScanResult" >
+		SELECT BD.DICT_NAME,
+			S.BILL_NO,
+			S.PACK_BAR_CODE,
+			S.SITE_NAME,
+			S.CREATE_BY,
+			S.SCAN_TIME,
+			S.NEXT_SITE_NAME,
+			S.DEVICE_CODE
+		 FROM HS_OPT_SEND_PACK S
+		LEFT JOIN HS_BASIC_DICT BD ON BD.DICT_ID = S.SCAN_SOURCE
+		WHERE S.STATUS=1 
+		<if test="siteName != null and siteName !=''">
+			AND	S.SITE_ID = #{siteName}
+		</if>
+		<if test="billNo != null and billNo != ''">
+			AND (S.BILL_NO = #{billNo} or S.PACK_BAR_CODE = #{billNo})
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND to_date(#{scanStartTime,jdbcType=DATE},'yyyy-mm-dd hh24:mi:ss') <= S.SCAN_TIME]]> 
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND to_date(#{scanEndTime,jdbcType=DATE},'yyyy-mm-dd hh24:mi:ss')+1 >= S.SCAN_TIME]]>
+		</if>
+		<if test="packBarCode != null and packBarCode !=''">
+			AND S.PACK_BAR_CODE = #{packBarCode}
+		</if>
+		<if test="nextSiteName != null and nextSiteName !=''">
+		 	AND	S.NEXT_SITE_ID =#{nextSiteName}
+		</if>
+		<if test="createBy != null and createBy !=''">
+			AND S.CREATE_BY_ID = #{createBy}
+		</if>
+		ORDER BY S.SCAN_TIME DESC
+	</select>
+</mapper>

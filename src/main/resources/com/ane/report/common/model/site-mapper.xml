@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="BasicSiteMapper">
+<resultMap type="com.ane.report.operation.scan.model.BasicSiteVO" id="SiteResult">
+		<result property="siteId" column="SITE_ID" />
+		<result property="siteCode" column="SITE_CODE" />
+		<result property="siteName" column="SITE_NAME" />
+		<result property="sitePinyin" column="SITE_PINYIN" />
+		<result property="siteOrder" column="SITE_ORDER" />	
+		<result property="parentSiteId" column="PARENT_SITE_ID" />
+		<result property="scanCenterSiteId" column="SCAN_CENTER_SITE_ID" />
+		<result property="billCenterSiteId" column="BILL_CENTER_SITE_ID" />
+		<result property="firstCenterSiteId" column="FIRST_CENTER_SITE_ID" />
+		<result property="siteTypeId" column="SITE_TYPE_ID" />
+		<result property="blFinance" column="BL_FINANCE" />
+		<result property="podLimitAmount" column="POD_LIMIT_AMOUNT" />
+		<result property="codLimitAmount" column="COD_LIMIT_AMOUNT" />
+		<result property="airplaneLimitAmount" column="AIRPLANE_LIMIT_AMOUNT" />
+		<result property="siteState" column="SITE_STATUS" />
+		<result property="moneyTypeId" column="MONEY_TYPE_ID" />
+		<result property="starLevel" column="STAR_LEVEL" />
+		<result property="sameSiteSite" column="SAME_SITE_ID" />
+		<result property="remark" column="REMARK" />
+		<result property="createdBy" column="CREATED_BY" />
+		<result property="createdTime" column="CREATED_TIME" />
+		<result property="modifiedBy" column="MODIFIED_BY" />
+		<result property="modifiedTime" column="MODIFIED_TIME" />
+		<result property="rdStatus" column="RD_STATUS" />		
+		<result property="serviceType" column="SERVICETYPE"/>	
+		<result property="siteMode" column="SITE_MODE"/>	
+		<result property="parentSiteBankId" column="PARENT_SITE_BANK_ID"/>	
+		<result property="dispSiteId" column="DISP_SITE_ID"/>	
+		<result property="mtlSiteId" column="MTL_SITE_ID"/>	
+		<result property="transferPwd" column="TRANSFER_PWD"/>	
+		<result property="deliveryTime" column="DELIVERY_TIME"/>
+		<result property="receviedTime" column="RECEIVED_TIME"/>
+		<result property="signExtendTime" column="SIGN_EXTEND_TIME"/>
+		<result property="signNormTime" column="SIGN_NORM_TIME"/>
+</resultMap>
+	<resultMap type="com.ane.report.operation.scan.model.BasicSiteVO" id="BasicSiteResult">
+		<result property="siteId" column="SITE_ID" />
+		<result property="siteCode" column="SITE_CODE" />
+		<result property="siteName" column="SITE_NAME" />
+		<result property="sitePinyin" column="SITE_PINYIN" />
+		<result property="billCenterSiteId" column="BILL_CENTER_SITE_ID" />
+	</resultMap>
+	<sql id="siteSql">
+	 <![CDATA[
+	 	SITE_ID,
+	 	SITE_CODE,
+	 	SITE_NAME,
+	 	SITE_PINYIN,
+	 	SITE_ORDER,
+	 	PARENT_SITE_ID,
+	 	SCAN_CENTER_SITE_ID,
+	 	BILL_CENTER_SITE_ID,
+	 	FIRST_CENTER_SITE_ID,
+	 	SITE_TYPE_ID,
+	 	BL_FINANCE,
+	 	POD_LIMIT_AMOUNT,
+	 	COD_LIMIT_AMOUNT,
+	 	AIRPLANE_LIMIT_AMOUNT,
+	 	SITE_STATUS,
+	 	MONEY_TYPE_ID,
+	 	STAR_LEVEL,
+	 	SAME_SITE_ID,
+	 	REMARK,
+	 	CREATED_BY,
+	 	CREATED_TIME,
+	 	MODIFIED_BY,
+	 	MODIFIED_TIME,
+	 	RD_STATUS,
+	 	SERVICETYPE,
+	 	SITE_MODE,
+	 	PARENT_SITE_BANK_ID,
+	 	DISP_SITE_ID,
+	 	MTL_SITE_ID,
+	 	TRANSFER_PWD,
+	 	DELIVERY_TIME,
+	 	RECEIVED_TIME,
+	 	SIGN_EXTEND_TIME,
+	 	SIGN_NORM_TIME
+	 ]]>
+	</sql>
+	<!-- 根据编号 拼音 名称 模糊查询网点 -->
+	<select id="querySiteByLike" parameterType="com.ane.report.operation.scan.model.BasicSiteVO" resultMap="BasicSiteResult">
+	 SELECT SITE_ID,SITE_CODE,SITE_NAME 
+	 ,SITE_PINYIN,BILL_CENTER_SITE_ID FROM	( SELECT SITE_ID,SITE_CODE,SITE_NAME 
+	 ,SITE_PINYIN,BILL_CENTER_SITE_ID   
+		FROM
+		 HS_BASIC_SITE where   
+		( SITE_NAME LIKE '%${siteName}%' OR SITE_CODE LIKE '%${siteName}%' OR SITE_PINYIN LIKE '%${sitePinyin}%' ) 
+		AND RD_STATUS = 1 
+		<if test="siteState != null and siteState !=''">
+			AND site_status=#{siteState}
+		</if>
+		<if test="aneSiteLimit !=null and aneSiteLimit!=''">
+			AND SITE_ID not in(1625,1617) 
+		</if>
+		<if test="billCenterSiteId !=null and billCenterSiteId!= ''">
+			AND BILL_CENTER_SITE_ID = #{billCenterSiteId}
+		</if>
+		<!-- <if test="dtbtCenterSiteId !=null and dtbtCenterSiteId= ''">
+			AND SITE_TYPE_ID in (SELECT DICT_ID FROM HS_BASIC_DICT WHERE TYPE_CODE = 'site_type' 
+		AND DICT_NAME LIKE '%分拨中心%')
+		</if>
+		<if test="centerSiteId !=null and centerSiteId != ''">
+			AND SITE_TYPE_ID in (SELECT DICT_ID FROM HS_BASIC_DICT WHERE TYPE_CODE = 'site_type' 
+			AND DICT_NAME LIKE '%中心%')
+		</if>
+		<if test="secondSiteId != null and secondSiteId != ''">
+			AND SITE_TYPE_ID in (SELECT DICT_ID FROM HS_BASIC_DICT WHERE TYPE_CODE = 'site_type' 
+			AND DICT_NAME LIKE '%二级加盟网点%')
+		</if>
+		<if test="centerSiteIdAndRoot !=null and centerSiteIdAndRoot!=''">
+			AND SITE_TYPE_ID in (SELECT DICT_ID FROM HS_BASIC_DICT WHERE TYPE_CODE = 'site_type' 
+			AND DICT_NAME LIKE '%中心%' or DICT_NAME like '%总部%')
+		</if>
+		<if test="siteIdAndRoot != null and siteIdAndRoot != ''">
+			AND SITE_TYPE_ID in (SELECT DICT_ID FROM HS_BASIC_DICT WHERE TYPE_CODE = 'site_type' 
+			AND DICT_NAME not LIKE '%中心%' or DICT_NAME like '%总部%')
+		</if> -->
+		<if test="loginSite !=null and loginSite != ''">
+			AND SITE_ID IN ( SELECT SITE_ID FROM HS_BASIC_SITE START WITH SITE_ID =#{loginSite}
+			CONNECT BY NOCYCLE PRIOR SITE_ID=PARENT_SITE_ID ) 
+		</if>
+		<![CDATA[
+		ORDER BY LENGTH(SITE_NAME),SITE_ORDER ) WHERE ROWNUM <= #{rownum} 
+		]]>
+	</select>
+</mapper>

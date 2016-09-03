@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ane.report.operation.scan.dao.IArrivePackDao">
+	<resultMap id="resultMap" type="com.ane.report.operation.scan.model.ArrivePack">
+		<id column="reach_id" property="reachId" jdbcType="INTEGER" />
+		<result column="create_by" property="createBy" jdbcType="VARCHAR" />
+		<result column="create_by_id" property="createById" jdbcType="INTEGER" />
+		<result column="site_name" property="siteName" jdbcType="VARCHAR" />
+		<result column="site_id" property="siteId" jdbcType="INTEGER" />
+		<result column="scan_time" property="scanTime" jdbcType="TIMESTAMP" />
+		<result column="scan_source" property="scanSource" jdbcType="INTEGER" />
+		<result column="device_code" property="deviceCode" jdbcType="VARCHAR" />
+		<result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+		<result column="status" property="status" jdbcType="INTEGER" />
+		<result column="bill_type" property="billType" jdbcType="INTEGER" />
+		<result column="bill_no" property="billNo" jdbcType="VARCHAR" />
+		<result column="pack_bar_code" property="packBarCode" jdbcType="VARCHAR" />
+		<result column="pack_type" property="packType" jdbcType="INTEGER" />
+		<result column="prev_site" property="prevSite" jdbcType="VARCHAR" />
+		<result column="prev_site_id" property="prevSiteId" jdbcType="INTEGER" />
+		<result column="sourceName" property="sourceName" jdbcType="INTEGER" />
+	</resultMap>
+	<sql id="Base_Column_List">
+	 <![CDATA[
+        	reach_id,create_by, create_by_id,
+		site_name,site_id,
+		scan_time,scan_source,device_code,prev_site,prev_site_id,create_time,status,bill_type,bill_no,pack_bar_code,pack_type,dict_name as sourceName
+	    ]]>
+	</sql>
+	<select id="queryByPage" parameterType="com.ane.report.operation.scan.model.ArrivePack"
+		resultMap="resultMap">
+		select
+		<include refid="Base_Column_List" />
+		from  hs_opt_reach_pack arrivePack
+		left join hs_basic_dict d on arrivePack.scan_source =d.dict_id
+		WHERE status=1
+		<if test="createById != null and createById != ''">
+			AND arrivePack.create_by_id = #{createById}
+		</if>
+		<if test="billNo != null and billNo != ''">
+			AND arrivePack.bill_no = #{billNo}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND arrivePack.site_id = #{siteId}
+		</if>
+		<if test="prevSiteId != null and prevSiteId != ''">
+			AND arrivePack.prev_site_id = #{prevSiteId}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND to_date(#{scanStartTime,jdbcType=VARCHAR},'yyyy-mm-dd') <= arrivePack.scan_time]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND to_date(#{scanEndTime,jdbcType=VARCHAR},'yyyy-mm-dd') + 1>= arrivePack.scan_time]]>
+		</if>
+		ORDER BY ARRIVEPACK.SCAN_TIME DESC
+	</select>
+</mapper>

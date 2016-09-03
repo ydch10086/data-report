@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ane.report.operation.scan.dao.ISignScanDao">
+	<resultMap id="signScanResult" type="com.ane.report.operation.scan.model.SignScanVO">
+		<result property="ewbNo" column="EWB_NO"/>
+		<result property="operationId" column="OPERATION_ID"/>
+		<result property="siteId" column="SITE_ID"/>
+		<result property="signTime" column="SIGN_TIME"/>
+		<result property="dispatchEmployeeId" column="DISPATCH_EMPLOYEE_ID"/>
+		<result property="signMan" column="SIGN_MAN"/>
+		<result property="scanSourceId" column="SCAN_SOURCE_ID"/>
+		<result property="deviceCode" column="DEVICE_CODE"/>
+		<result property="remark" column="REMARK"/>
+		<result property="signType" column="SIGN_TYPE"/>
+		<result property="signReason" column="SIGN_REASON"/>
+		<result property="signReasonId" column="SIGN_REASON_ID"/>
+		<result property="signAttach" column="SIGN_ATTACH"/>
+		<result property="createBy" column="CREATE_BY"/>
+		<result property="siteName" column="SITE_NAME"/>
+		<result property="signReasonNote" column="SIGN_REASON_NOTE"/>
+		<result property="rdStatus" column="RD_STATUS"/>
+		<result property="createdTime" column="CREATED_TIME"/>
+		<result property="createdBy" column="CREATED_BY"/>
+		<result property="modifiedBy" column="MODIFIED_BY"/>
+		<result property="modifiedTime" column="MODIFIED_TIME"/>
+	</resultMap>
+	<resultMap type="com.ane.report.operation.scan.model.SignScanVO" id="signMapper">
+		<result property="ewbNo" column="EWB_NO"/>
+		<result property="siteName" column="SITENAME"/>
+		<result property="employeeName" column="CREATEDBY"/>
+		<result property="signTime" column="SIGN_TIME"/>
+		<result property="sendSiteName" column="SENDSITENAME"/>
+		<result property="deliveryEmployeeName" column="DELIVERYMAN"/>
+		<result property="deliveryManId" column="DELIVERY_MAN_ID"/>
+		<result property="dictName" column="DICTNAME"/>
+		<result property="deviceCode" column="DEVICE_CODE"/>
+		<result property="siteId" column="SITE_ID"/>
+		<result property="sendSiteId" column="SEND_SITE_ID"/>
+		<result property="dispatchEmployeeId" column="CREATE_BY_ID"/>
+		<result property="createdBy" column="CREATED_BY"/>
+		<result property="employeeId" column="EMPLOYEE_ID"/>
+	</resultMap>
+	<select id="querySignScanByPage" resultMap="signMapper" >
+		<!-- SELECT 
+		 S.EWB_NO,
+		 S.SITE_NAME AS SITENAME,
+		 E.EMPLOYEE_NAME AS EMPLOYEE,
+	      S.SIGN_TIME,
+	      B2.SITE_NAME AS SENDSITENAME,
+	      E2.EMPLOYEE_NAME AS 
+	      DELIVERYEMPLOYEENAME,
+	      BD.DICT_NAME as DICTNAME,
+	      S.DEVICE_CODE,B2.SITE_ID as SEND_SITE_NAME_ID
+	      FROM HS_OPT_SIGN S
+	      LEFT JOIN HS_OPT_SEND S2 ON S.EWB_NO=S2.EWB_NO 
+	      LEFT JOIN HS_BASIC_SITE B2 ON S2.SITE_ID =B2.SITE_ID
+	      LEFT JOIN HS_BASIC_EMPLOYEE E ON S.CREATED_BY = E.EMPLOYEE_ID
+	      LEFT JOIN HS_BASIC_SITE B ON B.SITE_ID=S.SITE_ID
+	      LEFT JOIN HS_OPT_DELIVERY D ON D.EWB_NO=S.EWB_NO
+	      LEFT JOIN HS_BASIC_EMPLOYEE E2 ON D.DELIVERY_MAN_ID=E2.EMPLOYEE_ID
+	      LEFT JOIN HS_BASIC_DICT BD ON BD.DICT_ID = S.SCAN_SOURCE_ID
+	      WHERE S.RD_STATUS=1 -->
+	     <!--  SELECT 
+	      HS.EWB_NO,
+	      (SELECT  S1.SITE_NAME FROM HS_BASIC_SITE S1 WHERE S1.SITE_ID =HS.SITE_ID) SITENAME,
+	      (SELECT H1.EMPLOYEE_NAME FROM HS_BASIC_EMPLOYEE H1 WHERE H1.EMPLOYEE_ID = HS.CREATED_BY) CREATEDBY,
+	      HS.SIGN_TIME,
+	      (SELECT  S2.SITE_NAME FROM HS_BASIC_SITE S2 WHERE S2.SITE_ID = OS.SITE_ID) SENDSITENAME,
+	      (SELECT H2.EMPLOYEE_NAME FROM HS_BASIC_EMPLOYEE H2 WHERE H2.EMPLOYEE_ID = HD.DELIVERY_MAN_ID) DELIVERYMAN,
+	      BD.DICT_NAME as DICTNAME,
+	      HS.DEVICE_CODE
+	       FROM HS_OPT_SIGN HS 
+	       LEFT JOIN HS_OPT_SEND OS  ON HS.EWB_NO = OS.EWB_NO  
+	       LEFT JOIN HS_OPT_DELIVERY HD ON HS.EWB_NO = HD.EWB_NO
+	       LEFT JOIN HS_BASIC_DICT BD ON BD.DICT_ID = HS.SCAN_SOURCE_ID
+	       WHERE HS.RD_STATUS=1 -->
+	        SELECT DISTINCT S.EWB_NO EWB_NO,
+	         S.SITE_NAME SITENAME,
+	         S.CREATE_BY CREATEDBY,
+	         S.SIGN_TIME SIGN_TIME,
+	         BA.SITE_NAME SENDSITENAME,
+	         DE.CREATE_BY DELIVERYMAN,
+	         BD.DICT_NAME AS DICTNAME,
+	         S.DEVICE_CODE
+		      FROM HS_OPT_SIGN S
+		      LEFT JOIN HS_OPT_DELIVERY DE ON S.DISPATCH_EMPLOYEE_ID = DE.DELIVERY_MAN_ID AND S.EWB_NO = DE.EWB_NO
+		      LEFT JOIN HS_OPT_EWB EWB ON S.EWB_NO = EWB.EWB_NO
+		      LEFT JOIN HS_BASIC_SITE BA ON EWB.INPUT_SITE_ID = BA.SITE_ID
+		      LEFT JOIN HS_BASIC_DICT BD ON BD.DICT_ID = S.SCAN_SOURCE_ID
+		      WHERE S.RD_STATUS=1
+		<if test="ewbNo != null and ewbNo != ''">
+			AND S.EWB_NO=#{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND to_date(#{scanStartTime,jdbcType=DATE},'yyyy-mm-dd') <= S.SIGN_TIME]]> 
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND to_date(#{scanEndTime,jdbcType=DATE},'yyyy-mm-dd')+1 >= S.SIGN_TIME]]>
+		</if>
+		<if test="siteName != null and siteName != ''">
+			AND S.SITE_ID = #{siteName}
+		</if>
+		<if test="sendSiteName != null and sendSiteName != ''">
+			AND EWB.SEND_SITE_ID=#{sendSiteName}
+		</if>
+		<if test="employeeName != null and employeeName != ''">
+			AND DE.CREATE_BY_ID=#{employeeName}
+		</if>
+		<if test="deliveryEmployeeName != null and deliveryEmployeeName != ''">
+			AND DE.DELIVERY_MAN_ID=#{deliveryEmployeeName}
+		</if>
+		ORDER BY S.SIGN_TIME DESC
+	</select>
+</mapper>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ane.report.operation.scan.dao.IReceiveScanDao">
+	<resultMap id="resultMap" type="com.ane.report.operation.scan.model.Receive">
+		<id column="reach_id" property="reachId" jdbcType="INTEGER" />
+		<result column="employee_name" property="createBy" jdbcType="VARCHAR" />
+		<result column="employee_id" property="createById" jdbcType="INTEGER" />
+		<result column="site_name" property="siteName" jdbcType="VARCHAR" />
+		<result column="site_id" property="siteId" jdbcType="INTEGER" />
+		<result column="scan_time" property="scanTime" jdbcType="TIMESTAMP" />
+		<result column="scan_source_id" property="scanSource" jdbcType="INTEGER" />
+		<result column="device_code" property="deviceCode" jdbcType="VARCHAR" />
+		<result column="sendCustomer" property="sendCustomer" jdbcType="VARCHAR" />
+		<result column="accepCustomer" property="accepCustomer"
+			jdbcType="VARCHAR" />
+		<result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+		<result column="rd_status" property="status" jdbcType="INTEGER" />
+		<result column="ewb_no" property="ewbNo" jdbcType="VARCHAR" />
+		<result column="sourceName" property="sourceName" jdbcType="INTEGER" />
+	</resultMap>
+
+	<select id="queryByPage" resultMap="resultMap">
+		select r.ewb_no,
+		e.employee_name,
+		e.employee_id,
+		s.site_name,
+		s.site_id,
+		r.scan_time,
+		r.scan_source_id,
+		r.device_code,
+		sc.customer_type sendType,
+		sc.customer_name sendCustomer,
+		rc.customer_type accepType,
+		dict_name as sourceName,
+		rc.customer_name accepCustomer
+		from hs_basic_employee e
+		inner join
+		hs_opt_receive r
+		on e.employee_id = r.receive_employee_id
+		inner join
+		hs_basic_site s
+		on s.site_id = r.site_id
+		and s.rd_status=1
+		left join hs_opt_ewb_customer
+		sc
+		on r.ewb_no = sc.ewb_no
+		and sc.customer_type = 10
+		left join
+		hs_opt_ewb_customer rc
+		on r.ewb_no = rc.ewb_no
+		and rc.customer_type = 20
+		left join hs_basic_dict d on r.scan_source_id =d.dict_id
+		WHERE r.rd_status = 1
+		<if test="createById != null and createById != ''">
+			AND e.employee_id = #{createById}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND r.ewb_no = #{ewbNo}
+		</if>
+		<if test="siteId != null and siteId != ''">
+			AND r.site_id = #{siteId}
+		</if>
+		<if test="sendCustomer != null and sendCustomer != ''">
+			AND sc.customer_name = #{sendCustomer}
+		</if>
+		<if test="accepCustomer != null and accepCustomer != ''">
+			AND rc.customer_name = #{accepCustomer}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND to_date(#{scanStartTime,jdbcType=VARCHAR},'yyyy-mm-dd') <= r.scan_time]]>
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND to_date(#{scanEndTime,jdbcType=VARCHAR},'yyyy-mm-dd') + 1>= r.scan_time]]>
+		</if>
+		ORDER BY R.SCAN_TIME DESC
+	</select>
+
+
+
+
+</mapper>

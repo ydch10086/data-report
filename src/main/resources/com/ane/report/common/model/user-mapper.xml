@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ane.report.common.dao.IAuthUserDao">
+	<select id="getUserByUserName" resultType="com.ane.report.common.model.AuthUser" >
+		<!-- SELECT USER_ID     USERID,
+	       USER_NAME   USERNAME,
+	       USER_PWD    USERPWD,
+	       USER_TYPE   USERTYPE,
+	       EMPLOYEE_ID EMPLOYEEID,
+	       EXPIRE_DATE EXPIREDATE,
+	       RD_STATUS userStatus
+	  	FROM HS_AUTH_USER
+		WHERE USER_NAME = #{userName} and RD_STATUS = 1 -->
+		SELECT USER_ID     USERID,
+          u.USER_NAME   USERNAME,
+          u.USER_PWD    USERPWD,
+          u.USER_TYPE   USERTYPE,
+          u.EMPLOYEE_ID EMPLOYEEID,
+          u.EXPIRE_DATE EXPIREDATE,
+	      u.RD_STATUS userStatus,
+          e.SITE_ID siteId,
+          s.site_name siteName
+	  	FROM HS_AUTH_USER u
+        left join hs_basic_employee e on e.employee_id=u.EMPLOYEE_ID
+        left join hs_basic_site s on e.site_id=s.site_id
+		WHERE USER_NAME = #{userName} and u.RD_STATUS = 1
+	</select>
+</mapper>

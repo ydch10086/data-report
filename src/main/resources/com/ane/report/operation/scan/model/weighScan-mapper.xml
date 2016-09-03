@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ane.report.operation.scan.dao.IWeighScanDao">
+	<resultMap id="weightScanMap" type="com.ane.report.operation.scan.model.WeightScanVO">
+		<result property="weighId" column="WEIGH_ID" />
+		<result property="ewbNO" column="EWB_NO" />
+		<result property="goodsType" column="GOODS_TYPE" />
+		<result property="goodsWeigh" column="GOODS_WEIGH" />
+		<result property="address" column="ADDRESS" />
+		<result property="receiptewbNO" column="RECEIPTEWB_NO" />
+		<result property="sendCustomerId" column="SEND_CUSTOMER_ID" />
+		<result property="sendCustomerName" column="SEND_CUSTOMER_NAME" />
+		<result property="receiveId" column="RECEIVE_ID" />
+		<result property="receiveName" column="RECEIVE_NAME" />
+		<result property="receiveSiteId" column="RECEIVE_SITE_ID" />
+		<result property="receiveSiteName" column="RECEIVE_SITE_NAME" />
+		<result property="prevSiteId" column="PREV_SITE_ID" />
+		<result property="prevSite" column="PREV_SITE" />
+		<result property="destSiteId" column="DEST_SITE_ID" />
+		<result property="destSite" column="DEST_SITE" />
+		<result property="siteID" column="SITE_ID" />
+		<result property="siteName" column="SITE_NAME" />
+		<result property="scanTime" column="SCAN_TIME" />
+		<result property="createdBy" column="CREATE_BY" />
+		<result property="createdById" column="CREATE_BY_ID" />
+		<result property="scanSourceName" column="SCAN_SOURCE" />
+		<result property="deviceCode" column="DEVICE_CODE" />
+		<result property="createdTime" column="CREATE_TIME" />
+		<result property="status" column="STATUS" />
+		<result property="centerWeight" column="CENTER_WEIGHT" />
+	</resultMap>
+	
+	<sql id="weighScanSql">
+	 <![CDATA[
+        	WEIGH_ID,
+			EWB_NO,
+			GOODS_TYPE,
+			GOODS_WEIGH,
+			ADDRESS,
+			RECEIPTEWB_NO,
+			SEND_CUSTOMER_ID,
+			SEND_CUSTOMER_NAME,
+			RECEIVE_ID,
+			RECEIVE_NAME,
+			RECEIVE_SITE_ID,
+			RECEIVE_SITE_NAME,
+			PREV_SITE_ID,
+			PREV_SITE,
+			DEST_SITE_ID,
+			DEST_SITE,
+			SITE_ID,
+			SITE_NAME,
+			SCAN_TIME,
+			CREATE_BY,
+			CREATE_BY_ID,
+			(SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  WEIGH.SCAN_SOURCE) AS SCAN_SOURCE,
+			DEVICE_CODE,
+			CREATE_TIME,
+			STATUS,
+			CENTER_WEIGHT
+	    ]]>
+	</sql>
+	<select id="queryWeighScanByPage" resultMap="weightScanMap" >
+		select <include refid="weighScanSql"/>
+		 from HS_OPT_WEIGH WEIGH
+		WHERE WEIGH.STATUS=1
+		<if test="createdBy != null and createdBy != ''">
+			AND WEIGH.CREATE_BY_ID = #{createdBy}
+		</if>
+		<if test="prevSite != null and prevSite != ''">
+			AND WEIGH.PREV_SITE_ID = #{prevSite}
+		</if>
+		<if test="siteName != null and siteName != ''">
+			AND WEIGH.SITE_ID = #{siteName}
+		</if>
+		<if test="ewbNO != null and ewbNO != ''">
+			AND WEIGH.EWB_NO = #{ewbNO}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= WEIGH.SCAN_TIME]]> 
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}  + 1>= WEIGH.SCAN_TIME]]>
+		</if>
+		ORDER BY WEIGH.SCAN_TIME DESC
+	</select>
+</mapper>

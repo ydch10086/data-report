@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CustomerVOMapper">
+<resultMap type="com.ane.report.operation.scan.model.CustomerVO" id="CustomerResult">
+		<result property="customerId" column="CUSTOMER_ID" />
+		<result property="customerCode" column="CUSTOMER_CODE" />
+		<result property="customerName" column="CUSTOMER_NAME" />
+		<result property="customerPinyin" column="CUSTOMER_PINYIN" />
+	</resultMap>
+
+	<!-- 根据拼音 名称 模糊查询 -->
+	<select id="queryCustomerByPCN" parameterType="com.ane.report.operation.scan.model.CustomerVO" resultMap="CustomerResult">
+		SELECT customerId,customerCode,customerName,customerPinyin FROM (
+		SELECT CUSTOMER_ID AS customerId ,
+		CUSTOMER_CODE AS customerCode ,
+		CUSTOMER_NAME AS customerName ,
+		CUSTOMER_PINYIN AS customerPinyin
+	    FROM HS_BASIC_CUSTOMER WHERE RD_STATUS = 1 AND ( CUSTOMER_NAME like '%${title}%' 
+	    OR CUSTOMER_CODE LIKE '%${title}%' OR  CUSTOMER_PINYIN LIKE '%${title}%') 
+	    <![CDATA[ ORDER BY LENGTH(CUSTOMER_NAME),CUSTOMER_ORDER ) WHERE 
+	    rownum <= ${rownum} ]]>
+	</select>
+</mapper>

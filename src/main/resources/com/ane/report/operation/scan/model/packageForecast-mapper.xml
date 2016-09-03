@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ane.report.operation.forecast.dao.IPackageForecastDao">
+	<resultMap id="resultMap" type="com.ane.report.operation.forecast.model.PackageForecast">
+		<result property="leaveTime" column="LEAVE_TIME" jdbcType="TIMESTAMP" />
+		<result property="carNum" column="CAR_NUM" jdbcType="VARCHAR" />
+		<result property="vehicleNumber" column="VEHICLE_NUMBER"
+			jdbcType="VARCHAR" />
+		<result property="taskNum" column="TASK_NUM" jdbcType="VARCHAR" />
+		<result property="packNum" column="PACK_NUM" jdbcType="INTEGER" />
+		<result property="leaveSiteId" column="LEAVE_SISTE_ID"
+			jdbcType="INTEGER" />
+		<result property="leaveSite" column="LEAVE_SISTE" jdbcType="VARCHAR" />
+		<result property="nextSiteId" column="NEXT_SITE_ID" jdbcType="INTEGER" />
+		<result property="nextSite" column="NEXT_SITE" jdbcType="VARCHAR" />
+		<result property="carDepartTaskNum" column="CAR_DEPART_TASK_NUM" jdbcType="VARCHAR" />
+		<result property="carUnloadTaskNum" column="CAR_UNLOAD_TASK_NUM" jdbcType="VARCHAR" />
+	</resultMap>
+	<resultMap id="resultDataMap" type="com.ane.report.operation.forecast.model.PackageForecast">
+		<result property="loadCarId" column="LOAD_CAR_ID" />
+		<result property="carNum" column="CAR_NUM" />
+		<result property="nextSiteId" column="NEXT_SITE_ID" />
+		<result property="nextSite" column="NEXT_SITE" />
+		<result property="groupPackId" column="GROUP_PACK_ID" />
+		<result property="scanTime" column="SCAN_TIME" />
+		<result property="createBy" column="CREATE_BY" />
+		<result property="createById" column="CREATE_BY_ID" />
+		<result property="taskNum" column="TASK_NUM" />
+		<result property="leaveSiteId" column="LEAVE_SISTE_ID" />
+		<result property="leaveSite" column="LEAVE_SISTE" />
+		<result property="packBarCode" column="PACK_BAR_CODE" />
+		<result property="scanSource" column="SCAN_SOURCE" />
+		<result property="deviceCode" column="DEVICE_CODE" />
+		<result property="createTime" column="CREATE_TIME" />
+		<result property="status" column="STATUS" />
+	</resultMap>
+	<resultMap id="resultPackageMap" type="com.ane.report.operation.forecast.model.BasicPackage">
+		<result property="packId" column="PACK_ID" />
+		<result property="packType" column="PACK_TYPE" />
+		<result property="packSize" column="PACK_SIZE" />
+		<result property="minVol" column="MIN_VOL" />
+		<result property="maxVol" column="MAX_VOL" />
+		<result property="minWeight" column="MIN_WEIGHT" />
+		<result property="maxWeight" column="MAX_WEIGHT" />
+		<result property="minTicket" column="MIN_TICKET" />
+		<result property="maxTicket" column="MAX_TICKET" />
+		<result property="firstCenterId" column="FIRST_CENTER_ID" />
+		<result property="createdBy" column="CREATED_BY" />
+		<result property="createdTime" column="CREATED_TIME" />
+		<result property="modifyBy" column="MODIFY_BY" />
+		<result property="modifyTime" column="MODIFY_TIME" />
+		<result property="rdStatus" column="RD_STATUS" />
+	</resultMap>
+	<resultMap id="resultDetailMap" type="com.ane.report.operation.forecast.model.PackageForecast">		
+		<result property="taskNum" column="TASK_NUM" />
+		<result property="carNum" column="CAR_NUM" />
+		<result property="nextSiteId" column="NEXT_SITE_ID" />
+		<result property="nextSite" column="NEXT_SITE" />
+		<result property="leaveSiteId" column="LEAVE_SISTE_ID" />
+		<result property="leaveSite" column="LEAVE_SISTE" />
+		<result property="packBarCode" column="PACK_BAR_CODE" />
+		<result property="ewbNum" column="EWB_NUM" />
+		<result property="vehicleNumber" column="VEHICLE_NUMBER" />
+	</resultMap>	
+	<sql id="dymnaicSql">
+		A1.LOAD_CAR_ID,
+		A1.CAR_NUM,
+		A1.NEXT_SITE_ID,
+		A1.NEXT_SITE,
+		A1.GROUP_PACK_ID,
+		A1.SCAN_TIME,
+		A1.CREATE_BY,
+		A1.CREATE_BY_ID,
+		A1.TASK_NUM,
+		A1.LEAVE_SISTE_ID,
+		A1.LEAVE_SISTE,
+		A1.PACK_BAR_CODE,
+		A1.SCAN_SOURCE,
+		A1.DEVICE_CODE,
+		A1.CREATE_TIME,
+		A1.STATUS
+	</sql>
+	<sql id="packageDymnaicSql">
+		PACK_ID,
+		PACK_TYPE,
+		PACK_SIZE,
+		MIN_VOL,
+		MAX_VOL,
+		MIN_WEIGHT,
+		MAX_WEIGHT,
+		MIN_TICKET,
+		MAX_TICKET,
+		FIRST_CENTER_ID,
+		CREATED_BY,
+		CREATED_TIME,
+		MODIFY_BY,
+		MODIFY_TIME,
+		RD_STATUS
+	</sql>
+	<sql id="dymnaicWhereParams">
+		<if test='taskNum != "" and taskNum != null'>
+			AND A1.TASK_NUM = #{taskNum,jdbcType=VARCHAR}
+		</if>
+		<if test='carNum != "" and carNum != null'>
+			AND A1.CAR_NUM = #{carNum}
+		</if>
+		<if test='nextSiteId != "" and nextSiteId != null'>
+			AND A1.NEXT_SITE_ID = #{nextSiteId}
+		</if>
+	</sql>
+	<sql id="dymnaicPackWhereParams">
+		<if test='packType != "" and packType != null'>
+			AND PACK_TYPE = #{packType}
+		</if>
+		<if test='packSize != "" and packSize != null'>
+			AND PACK_SIZE = #{packSize}
+		</if>
+	</sql>
+	<select id="queryDataByPage"
+		parameterType="com.ane.report.operation.forecast.model.PackageForecast"
+		resultMap="resultMap">
+		SELECT
+		A2.LEAVE_TIME,
+		A1.CAR_NUM,
+		A3.VEHICLE_NUMBER,
+		A1.TASK_NUM,
+		A1.PACK_NUM,
+		A1.LEAVE_SISTE_ID,
+		A1.LEAVE_SISTE,
+		A1.NEXT_SITE_ID,
+		A1.NEXT_SITE,
+		A2.TASK_NUM AS CAR_DEPART_TASK_NUM,
+        A4.TASK_NUM AS CAR_UNLOAD_TASK_NUM
+		FROM
+		(
+		SELECT
+		LEAVE_SISTE_ID,LEAVE_SISTE,TASK_NUM,CAR_NUM,COUNT(TASK_NUM) AS
+		PACK_NUM,NEXT_SITE_ID,NEXT_SITE
+		FROM HS_OPT_LOADCAR
+		GROUP BY
+		TASK_NUM,CAR_NUM,NEXT_SITE_ID,NEXT_SITE,LEAVE_SISTE_ID,LEAVE_SISTE
+		) A1
+		LEFT JOIN HS_OPT_CARDEPART A2 ON A1.TASK_NUM=A2.TASK_NUM
+		LEFT JOIN HS_BASIC_VEHICLE_CODE A3 ON A1.CAR_NUM = A3.VEHICLE_CODE
+		LEFT JOIN HS_OPT_UNLOADCAR A4 ON A1.TASK_NUM=A4.TASK_NUM
+		WHERE 1=1
+		<if test='nextSite != "" and nextSite != null'>
+			AND A1.NEXT_SITE = #{nextSite}
+		</if>
+		<if test='vehicleNumber != "" and vehicleNumber != null'>
+			AND A3.VEHICLE_NUMBER = #{vehicleNumber}
+		</if>
+		<!-- 统计未发车数据 :装车表task_num为空，并且发车表task_num也是空-->
+		<if test='loadCarTaskNum != "" and loadCarTaskNum != null'>
+			AND (A1.TASK_NUM IS NULL OR A1.TASK_NUM='0') AND (A2.TASK_NUM  IS NULL  OR A2.TASK_NUM='0')
+		</if>
+		<!-- 统计已发车数据 ：装车表task_num不为空，并且卸车表task_num为空-->
+		<if test='carDepartTaskNum != "" and carDepartTaskNum != null'>
+			AND (A1.TASK_NUM  IS NOT NULL OR A1.TASK_NUM !='0')  AND (A4.TASK_NUM  IS  NULL OR A4.TASK_NUM='0')
+		</if>
+		<!-- 统计已到达数据 ：卸车表task_num不为空-->
+		<if test='carUnloadTaskNum != "" and carUnloadTaskNum != null'>
+			AND (A4.TASK_NUM  IS NOT NULL OR A4.TASK_NUM !='0')
+		</if>
+		ORDER BY A2.LEAVE_TIME DESC
+	</select>
+
+	<select id="queryDataByParams"
+		parameterType="com.ane.report.operation.forecast.model.PackageForecast"
+		resultMap="resultDataMap">
+		SELECT
+		<include refid="dymnaicSql"></include>
+		FROM
+		HS_OPT_LOADCAR A1 WHERE 1=1
+		<include refid="dymnaicWhereParams"></include>
+	</select>
+
+	<select id="queryDataByMapParams" resultMap="resultDataMap">
+		SELECT
+		<include refid="dymnaicSql"></include>
+		FROM
+		HS_OPT_LOADCAR A1 WHERE 1=1
+		<include refid="dymnaicWhereParams"></include>
+	</select>
+
+	<select id="queryPackageDataParams" resultMap="resultPackageMap">
+		SELECT
+		<include refid="packageDymnaicSql"></include>
+		FROM
+		HS_BASIC_PACKAGE WHERE 1=1
+		<include refid="dymnaicPackWhereParams"></include>
+	</select>
+
+	<select id="queryLoadCarDetailParams" resultMap="resultDetailMap">
+		SELECT
+		A1.TASK_NUM,
+		A1.CAR_NUM,
+		A1.NEXT_SITE_ID,
+		A1.NEXT_SITE,
+		A1.LEAVE_SISTE_ID,
+		A1.LEAVE_SISTE,
+		A1.PACK_BAR_CODE,
+		A2.EWB_NUM,
+		A3.VEHICLE_NUMBER
+		FROM HS_OPT_LOADCAR A1
+		LEFT JOIN HS_OPT_GROUP_PACK A2 
+		ON A1.PACK_BAR_CODE = A2.PACK_BAR_CODE
+		LEFT JOIN HS_BASIC_VEHICLE_CODE A3 
+		ON A1.CAR_NUM=A3.VEHICLE_CODE
+		WHERE 1=1
+		<if test='carNum != "" and carNum != null'>
+			AND A1.CAR_NUM = #{carNum}
+		</if>
+		<if test='taskNum != "" and taskNum != null'>
+			AND A1.TASK_NUM = #{taskNum}
+		</if>
+		<if test='leaveSite != "" and leaveSite != null'>
+			AND A1.LEAVE_SISTE = #{leaveSite}
+		</if>
+		<if test='nextSite != "" and nextSite != null'>
+			AND A1.NEXT_SITE = #{nextSite}
+		</if>
+	</select>
+	<select id="queryCarDepartCountByParams" resultType="java.lang.Integer">
+		SELECT
+		COUNT(*)
+		FROM 
+		HS_OPT_CARDEPART a1
+		WHERE 1=1
+		<if test='carNum != "" and carNum != null'>
+			AND A1.CAR_NUM = #{carNum}
+		</if>
+		<if test='taskNum != "" and taskNum != null'>
+			AND A1.TASK_NUM = #{taskNum}
+		</if>
+		<if test='siteName != "" and siteName != null'>
+			AND A1.SITE_NAME = #{siteName}
+		</if>
+		<if test='nextSite != "" and nextSite != null'>
+			AND A1.NEXT_SITE_NAME = #{nextSiteName}
+		</if>
+	</select>
+	<select id="queryUnloadCarCountByParams" resultType="java.lang.Integer">	
+		SELECT
+		COUNT(*)
+		FROM 
+		HS_OPT_UNLOADCAR a1
+		WHERE 1=1
+		<if test='carNum != "" and carNum != null'>
+			AND A1.CAR_NUM = #{carNum}
+		</if>
+		<if test='taskNum != "" and taskNum != null'>
+			AND A1.TASK_NUM = #{taskNum}
+		</if>
+		<if test='unloadSiteId != "" and unloadSiteId != null'>
+			AND A1.UNLOAD_SITE_ID = #{unloadSiteId}
+		</if>
+		<if test='unloadSite != "" and unloadSite != null'>
+			AND A1.UNLOAD_SITE = #{unloadSite}
+		</if>
+	</select>
+</mapper>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ane.report.operation.scan.dao.ILoadCarScanDao">
+	<resultMap id="loadCarScanMap" type="com.ane.report.operation.scan.model.LoadCarScanVO">
+		<result property="scanTime" column="CREATE_TIME" />
+		<result property="taskNum" column="TASK_NUM" />
+		<result property="packgeCount" column="PACKGE_COUNT" />
+		<result property="platenNum" column="PLATE_NUM" />
+		<result property="scanSite" column="SITE_NAME" />
+		<result property="createBy" column="CREATE_BY_NAME" />
+		<result property="nextSite" column="NEXT_SITE_NAME" />
+		<result property="scanSourceName" column="SCAN_SOURCE" />
+		<result property="deviceCode" column="DEVICE_CODE" />
+	</resultMap>
+	
+	<select id="queryLoadCarScanByPage" resultMap="loadCarScanMap" >
+		SELECT 
+          DISTINCT CARDEPART.TASK_NUM,
+          CARDEPART.CREATE_TIME,        
+          CARDEPART.PLATE_NUM,
+          (SELECT COUNT(1) FROM HS_OPT_LOADCAR LOADCAR WHERE  LOADCAR.TASK_NUM = CARDEPART.TASK_NUM) AS PACKGE_COUNT,
+          CARDEPART.SITE_NAME,
+		      CARDEPART.CREATE_BY_NAME,
+		      CARDEPART.NEXT_SITE_NAME,
+		      (SELECT DICT.DICT_NAME FROM HS_BASIC_DICT DICT WHERE DICT.DICT_ID =  CARDEPART.SCAN_SOURCE) AS SCAN_SOURCE,
+		      CARDEPART.DEVICE_CODE
+		  FROM HS_OPT_CARDEPART CARDEPART
+		  LEFT JOIN HS_OPT_LOADCAR LOADCAR
+		    ON CARDEPART.TASK_NUM = LOADCAR.TASK_NUM
+		    AND LOADCAR.STATUS=1
+		    LEFT JOIN HS_OPT_GROUP_PACK PACK
+		    ON LOADCAR.PACK_BAR_CODE = PACK.PACK_BAR_CODE
+		    WHERE  1=1
+		<if test="platenNum != null and platenNum != ''">
+			AND CARDEPART.PLATE_NUM = #{platenNum}
+		</if>
+		<if test="createBy != null and createBy != ''">
+			AND CARDEPART.CREATE_BY_ID = #{createBy}
+		</if>
+		<if test="nextSite != null and nextSite != ''">
+			AND CARDEPART.NEXT_SITE_ID = #{nextSite}
+		</if>
+		<if test="scanSite != null and scanSite != ''">
+			AND CARDEPART.SITE_ID = #{scanSite}
+		</if>
+		<if test="packBarCode != null and packBarCode != ''">
+			AND PACK.PACK_BAR_CODE = #{packBarCode}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= CARDEPART.CREATE_TIME]]> 
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}  + 1 >= CARDEPART.CREATE_TIME]]>
+		</if>
+		ORDER BY CARDEPART.CREATE_TIME DESC
+	</select>
+	
+	
+	<select id="queryLoadCarScanByTastNum" resultType="com.ane.report.operation.scan.model.LoadCarScanDetailVO">
+		SELECT DISTINCT PACK.PACK_BAR_CODE AS PACKNUM,
+                PACK.SCAN_TIME     AS SCANTIME,
+                PACK.SITE_NAME     AS SITENAME
+		  FROM HS_OPT_GROUP_PACK PACK
+		  LEFT JOIN HS_OPT_LOADCAR LOADCAR
+		    ON PACK.PACK_BAR_CODE = LOADCAR.PACK_BAR_CODE
+		    WHERE  LOADCAR.TASK_NUM = #{taskNum}
+		    ORDER BY SCANTIME DESC
+	</select>
+</mapper>

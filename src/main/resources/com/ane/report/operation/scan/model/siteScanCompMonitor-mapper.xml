@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ane.report.operation.scan.dao.ISiteScanCompMonitorDao">
+	<resultMap id="siteScanCompMonitorMap" type="com.ane.report.operation.scan.model.SiteScanCompMonitorVO">
+		<result property="ewbNo" column="EWB_NO" />
+		<result property="scanTime" column="SCANTIME" />
+		<result property="createdBy" column="CREATEDBY" />
+		<result property="scanType" column="SCANTYPE" />
+		<result property="scanSite" column="SCANSITE" />
+	</resultMap>
+	
+	<!-- 本站有收 本站未发 -->
+	<select id="querySiteScanCompMonitorYSWFByPage" resultMap="siteScanCompMonitorMap" >
+		 SELECT RECEIVE.EWB_NO AS EWB_NO,
+	       RECEIVE.SCAN_TIME AS SCANTIME,
+	       (SELECT EMP.EMPLOYEE_NAME FROM HS_BASIC_EMPLOYEE EMP WHERE EMP.EMPLOYEE_ID =  RECEIVE.CREATED_BY) AS CREATEDBY,
+	       '本站有收--本站未发' AS SCANTYPE,
+	       (SELECT BSITE.SITE_NAME
+	          FROM HS_BASIC_SITE BSITE
+	         WHERE BSITE.SITE_ID = RECEIVE.SITE_ID) AS SCANSITE
+		  FROM HS_OPT_RECEIVE RECEIVE
+		  LEFT JOIN HS_OPT_SEND SEND ON RECEIVE.EWB_NO = SEND.EWB_NO WHERE NVL(SEND.EWB_NO, '1') = '1'
+		  AND RECEIVE.RD_STATUS = 1
+		<if test="scanSite != null and scanSite != ''">
+			AND RECEIVE.SITE_ID = #{scanSite}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND RECEIVE.EWB_NO = #{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= RECEIVE.SCAN_TIME]]> 
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}  + 1>= RECEIVE.SCAN_TIME]]>
+		</if>
+		ORDER BY SCANTIME DESC
+	</select>
+	
+	<!-- 本站有发 本站未收 -->
+	<select id="querySiteScanCompMonitorYFWSByPage" resultMap="siteScanCompMonitorMap" >
+		SELECT SEND.EWB_NO AS EWB_NO,
+	       SEND.SCAN_TIME AS SCANTIME,
+	       (SELECT EMP.EMPLOYEE_NAME FROM HS_BASIC_EMPLOYEE EMP WHERE EMP.EMPLOYEE_ID = SEND.CREATED_BY) AS CREATEDBY,
+	       '本站有发--本站未收' AS SCANTYPE,
+	       (SELECT BSITE.SITE_NAME
+	          FROM HS_BASIC_SITE BSITE
+	         WHERE BSITE.SITE_ID = SEND.SITE_ID) AS SCANSITE
+		  FROM HS_OPT_SEND SEND
+		 LEFT JOIN HS_OPT_RECEIVE RECEIVE ON  SEND.EWB_NO = RECEIVE.EWB_NO WHERE NVL(RECEIVE.EWB_NO,'1')='1'
+		 AND SEND.RD_STATUS = 1
+		<if test="scanSite != null and scanSite != ''">
+			AND SEND.SITE_ID = #{scanSite}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND SEND.EWB_NO = #{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= SEND.SCAN_TIME]]> 
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}  + 1>= SEND.SCAN_TIME]]>
+		</if>
+		ORDER BY SCANTIME DESC
+	</select>
+	
+	<!-- 本站有到 本站未派-->
+	<select id="querySiteScanCompMonitorYDWPByPage" resultMap="siteScanCompMonitorMap" >
+		 SELECT REACH.EWB_NO AS EWB_NO,
+	       REACH.SCAN_TIME AS SCANTIME,
+	       REACH.CREATE_BY AS CREATEDBY,
+	       '本站有到--本站未派' AS SCANTYPE,
+	       REACH.SITE_NAME AS SCANSITE
+		  FROM HS_OPT_REACH REACH
+		 LEFT JOIN HS_OPT_DELIVERY DELIVERY ON  REACH.EWB_NO = DELIVERY.EWB_NO WHERE NVL(DELIVERY.EWB_NO,'1')='1'
+		 AND REACH.STATUS = 1
+		<if test="scanSite != null and scanSite != ''">
+			AND REACH.SITE_ID = #{scanSite}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND REACH.EWB_NO = #{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= REACH.SCAN_TIME]]> 
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}  + 1>= REACH.SCAN_TIME]]>
+		</if>
+		ORDER BY SCANTIME DESC
+	</select>
+	
+	<!-- 本站有派 本站未签 -->
+	<select id="querySiteScanCompMonitorYPWQByPage" resultMap="siteScanCompMonitorMap" >
+		 SELECT DELIVERY.EWB_NO AS EWB_NO,
+	       DELIVERY.SCAN_TIME AS SCANTIME,
+	       DELIVERY.CREATE_BY AS CREATEDBY,
+	       '本站有派--本站未签' AS SCANTYPE,
+	       DELIVERY.SITE_NAME AS SCANSITE
+	  	 FROM HS_OPT_DELIVERY DELIVERY 
+	  	 LEFT JOIN  HS_OPT_SIGN OPTSIGN ON DELIVERY.EWB_NO = OPTSIGN.EWB_NO
+	  	 WHERE NVL(OPTSIGN.EWB_NO, '1') = '1'
+	  	 AND DELIVERY.STATUS = 1
+		<if test="scanSite != null and scanSite != ''">
+			AND DELIVERY.SITE_ID = #{scanSite}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND DELIVERY.EWB_NO = #{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= DELIVERY.SCAN_TIME]]> 
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}  + 1>= DELIVERY.SCAN_TIME]]>
+		</if>
+		ORDER BY SCANTIME DESC
+	</select>
+	
+	<!-- 本站有签 本站未派 -->
+	<select id="querySiteScanCompMonitorYQWPByPage" resultMap="siteScanCompMonitorMap" >
+		SELECT OPTSIGN.EWB_NO AS EWB_NO,
+	       OPTSIGN.SIGN_TIME AS SCANTIME,
+	       OPTSIGN.CREATE_BY AS CREATEDBY,
+	       '本站有签--本站未派' AS SCANTYPE,
+	       OPTSIGN.SITE_NAME AS SCANSITE
+		  FROM HS_OPT_SIGN OPTSIGN
+		 LEFT JOIN HS_OPT_DELIVERY DELIVERY ON OPTSIGN.EWB_NO = DELIVERY.EWB_NO 
+		 WHERE NVL(DELIVERY.EWB_NO,'1')='1'
+		 AND OPTSIGN.RD_STATUS = 1
+		<if test="scanSite != null and scanSite != ''">
+			AND OPTSIGN.SITE_ID = #{scanSite}
+		</if>
+		<if test="ewbNo != null and ewbNo != ''">
+			AND OPTSIGN.EWB_NO = #{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND #{scanStartTime,jdbcType=DATE} <= OPTSIGN.SIGN_TIME]]> 
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND #{scanEndTime,jdbcType=DATE}  + 1>= OPTSIGN.SIGN_TIME]]>
+		</if>
+		ORDER BY SCANTIME DESC
+	</select>
+	
+</mapper>

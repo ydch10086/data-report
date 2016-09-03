@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ane.report.operation.scan.dao.ISendScanDao">
+	<resultMap id="sendScanMap" type="com.ane.report.operation.scan.model.SendScanVO">
+		<result property="operationId" column="OPERATION_ID" />
+		<result property="ewbNo" column="EWB_NO"/>
+		<result property="siteId" column="SITE_ID"/>
+		<result property="scanTime" column="SCAN_TIME"/>
+		<result property="scanTimeInit" column="SCAN_TIME_INIT"/>
+		<result property="nextSiteId" column="NEXT_SITE_ID"/>
+		<result property="dispatchSiteId" column="DISPATCH_SITE_ID"/>
+		<result property="goosTypeId" column="GOODS_TYPE_ID"/>
+		<result property="classId" column="CLASS_ID"/>
+		<result property="scanSourceId" column="SCAN_SOURCE_ID"/>
+		<result property="deviceCode" column="DEVICE_CODE"/>
+		<result property="price" column="PIECE"/>
+		<result property="weight" column="WEIGHT"/>
+		<result property="length" column="LENGTH"/>
+		<result property="width" column="WIDTH"/>
+		<result property="high" column="HIGH"/>
+		<result property="volWeight" column="VOL_WEIGHT"/>
+		<result property="remark" column="REMARK"/>
+		<result property="createdBy" column="CREATED_BY"/>
+		<result property="createdTime" column="CREATED_TIME"/>
+		<result property="modifiedBy" column="MODIFIED_BY"/>
+		<result property="modifiedTime" column="MODIFIED_TIME"/>
+		<result property="rdStatus" column="RD_STATUS"/>
+		<result property="ewbTypeId" column="EWB_TYPE_ID"/>
+		<result property="pEwbNo" column="PEWB_NO"/>
+		<result property="nextSiteCode" column="NEXT_SITE_CODE"/>
+		<result property="nextSiteName" column="NEXT_SITE_NAME"/>
+	</resultMap>
+	<resultMap id="sendScanResult" type="com.ane.report.operation.scan.model.SendScanVO">
+		<result property="ewbNo" column="EWB_NO"/>
+		<result property="siteName" column="SITE_NAME"/>
+		<result property="employeeName" column="EMPLOYEE_NAME"/>
+		<result property="scanTime" column="SCAN_TIME"/>
+		<result property="nextSiteName" column="NEXT_SITE_NAME"/>
+		<result property="latticeCode" column="LATTICE_CODE"/>
+		<result property="dispatchCenterSite" column="DISPATCH_CENTER_SITE"/>
+		<result property="dispatchCenterSiteId" column="DISPATCH_CENTER_SITE_ID"/>
+		<result property="dictName" column="DICT_NAME"/>
+		<result property="deviceCode" column="DEVICE_CODE"/>
+		<result property="siteId" column="SITE_ID"/>
+		<result property="nextSiteId" column="NEXT_SITE_ID"/>
+		<result property="createdBy" column="CREATED_BY"/>
+	</resultMap>
+	<sql id="sendScanSql">
+	 <![CDATA[
+        	OPERATION_ID,
+        	EWB_NO,
+        	SITE_ID,
+        	SCAN_TIME,
+        	SCAN_TIME_INIT,
+        	NEXT_SITE_ID,
+        	DISPATCH_SITE_ID,
+        	GOODS_TYPE_ID,
+        	CLASS_ID,
+        	SCAN_SOURCE_ID,
+        	DEVICE_CODE,
+        	PIECE,
+        	WEIGHT,
+        	LENGTH,
+        	WIDTH,
+        	HIGH,
+        	VOL_WEIGHT,
+        	REMARK,
+        	CREATED_BY,
+        	CREATED_TIME,
+        	MODIFIED_BY,
+        	MODIFIED_TIME,
+        	RD_STATUS,
+        	EWB_TYPE_ID,
+        	PEWB_NO,
+        	NEXT_SITE_CODE,
+        	NEXT_SITE_NAME
+	    ]]>
+	</sql>
+	<select id="querySendScanByPage" resultMap="sendScanResult" >
+		SELECT 
+		HS_OPT_SEND.EWB_NO,
+		HS_BASIC_SITE.SITE_NAME,
+		HS_BASIC_EMPLOYEE.EMPLOYEE_NAME,
+		HS_OPT_SEND.SCAN_TIME,
+		HS_OPT_SEND.NEXT_SITE_NAME,
+		HS_BASIC_LARGE_LATTICE.LATTICE_CODE,
+		BD.DICT_NAME,
+		HS_OPT_SEND.DEVICE_CODE ,
+   		S.SITE_NAME AS DISPATCH_CENTER_SITE,
+   		HS_OPT_EWB.DISPATCH_CENTER_ID
+		FROM HS_OPT_SEND 
+		LEFT JOIN HS_BASIC_LARGE_LATTICE  ON HS_OPT_SEND.SITE_ID = HS_BASIC_LARGE_LATTICE.SITE_ID
+		LEFT JOIN HS_BASIC_SITE  ON HS_BASIC_SITE.SITE_ID=HS_OPT_SEND.SITE_ID
+		LEFT JOIN HS_BASIC_EMPLOYEE  ON HS_BASIC_EMPLOYEE.EMPLOYEE_ID =HS_OPT_SEND.CREATED_BY
+    	LEFT JOIN HS_OPT_EWB ON HS_OPT_EWB.EWB_NO=HS_OPT_SEND.EWB_NO
+    	LEFT JOIN HS_BASIC_SITE S ON S.SITE_ID=HS_OPT_EWB.DISPATCH_CENTER_ID
+    	LEFT JOIN HS_BASIC_DICT BD ON BD.DICT_ID = HS_OPT_SEND.SCAN_SOURCE_ID
+		WHERE HS_OPT_SEND.RD_STATUS=1
+		<if test="ewbNo!=null and ewbNo!=''">
+		 	AND hs_opt_send.EWB_NO=#{ewbNo}
+		</if>
+		<if test="scanStartTime != null and scanStartTime != ''">
+			<![CDATA[ AND to_date(#{scanStartTime,jdbcType=DATE},'yyyy-mm-dd hh24:mi:ss') <= hs_opt_send.SCAN_TIME]]> 
+		</if>
+		<if test="scanEndTime != null and scanEndTime != ''">
+			<![CDATA[ AND to_date(#{scanEndTime,jdbcType=DATE},'yyyy-mm-dd hh24:mi:ss')+1 >= hs_opt_send.SCAN_TIME]]>
+		</if>
+		<if test="siteName!=null and siteName!=''">
+			AND HS_OPT_SEND.SITE_ID=#{siteName}
+		</if>
+		<if test="nextSiteName!=null and nextSiteName!=''">
+			AND HS_OPT_SEND.NEXT_SITE_ID=#{nextSiteName}
+		</if>
+		<if test="employeeName != null and employeeName !=''">
+			AND HS_OPT_SEND.CREATED_BY = #{employeeName}
+		</if>
+		<if test="dispatchCenterSite != null and dispatchCenterSite != ''">
+			AND HS_OPT_EWB.DISPATCH_CENTER_ID=#{dispatchCenterSite}
+		</if>
+		ORDER BY HS_OPT_SEND.SCAN_TIME DESC
+	</select>
+</mapper>
